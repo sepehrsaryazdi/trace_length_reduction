@@ -77,4 +77,4 @@ tr(A'): 38.6984278549383
 ---------------------------------
 ```
 
-![Length and Trace Plot](LengthTracePlot.png)
+![Length and Trace Plot](LengthTracePlot.pdf)
