@@ -47,7 +47,7 @@ The expected output is given below.
 ```
 A = \begin{pmatrix} 2680/7 & -22261/400 & 196/675 \\ -2795/14 & 91827/2800 & -196/675 \\ 245/2 & -9261/400 & 196/675 \end{pmatrix}
 B = \begin{pmatrix} 0 & 0 & 45/784 \\ 0 & -35/6 & -22495/2352 \\ 224/75 & 4769611/259200 & 37580269/1814400 \end{pmatrix}
-----TRACE MINIMISATION RESULTS----
+----TRACE REDUCTION RESULTS----
 X coordinates: (27/64, 64/125, 1/27, 1/8, 64, 8/729, 512, 343/216)
 Returned Generators: (A**(-1)*B**(-2), B)
 tr(A'): 38.2463556393753 
@@ -61,7 +61,7 @@ tr(A'): 38.2463556393753
  tr([A',B']): 8.89464378231817 
  length([A',B']): 3.6252814640259485
 ---------------------------------
-----LENGTH MINIMISATION RESULTS----
+----LENGTH REDUCTION RESULTS----
 X coordinates: (27/64, 64/125, 1/27, 1/8, 64, 8/729, 512, 343/216)
 Returned Generators: (A*B, B)
 tr(A'): 38.6984278549383 
@@ -76,3 +76,5 @@ tr(A'): 38.6984278549383
  length([A',B']): 3.6252814640259485
 ---------------------------------
 ```
+
+![Length and Trace Plot](LengthTracePlot.png)
