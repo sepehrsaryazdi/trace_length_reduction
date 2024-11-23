@@ -429,7 +429,7 @@ alpha_returned, beta_returned, visited_generators_trace, expression = main_algor
 alpha_length, beta_length = calculate_lengths(alpha_returned, beta_returned)
 
 
-print("----TRACE MINIMISATION RESULTS----")
+print("----TRACE REDUCTION RESULTS----")
 print('X coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
 print('Returned Generators:', str(expression).replace("a","A").replace("b","B"))
 print("tr(A'):", sp.trace(alpha_returned).evalf(),"\n",
@@ -449,7 +449,7 @@ print('---------------------------------')
 alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, calculate_geodesic_length, [])
 
 
-print("----LENGTH MINIMISATION RESULTS----")
+print("----LENGTH REDUCTION RESULTS----")
 print('X coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
 print('Returned Generators:', str(expression).replace("a","A").replace("b","B"))
 print("tr(A'):", sp.trace(alpha_returned).evalf(),"\n",
