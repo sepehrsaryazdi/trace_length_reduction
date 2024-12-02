@@ -6,11 +6,11 @@ def generate_arithmetic_torus_example():
     return [sp.Number(1)]*8
 
 
-def generate_hyperbolic_surface_shorter_end_example():
+def generate_hyperbolic_surface_shorter_hyperbolic_end_example():
     return [sp.Number(1), sp.Number(1)] + [sp.Pow(sp.Number(6)/sp.Number(5),1/sp.Number(3))]*6
 
 
-def generate_hyperbolic_surface_longer_end_example():
+def generate_hyperbolic_surface_longer_hyperbolic_end_example():
     return [sp.Number(1), sp.Number(1)] + [sp.Pow(sp.Number(3)/sp.Number(2),1/sp.Number(3))]*6
 
 
@@ -71,6 +71,6 @@ def generate_longer_special_end_example():
 
 
 def give_all_examples():
-    return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_end_example, generate_hyperbolic_surface_longer_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example]
+    return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_hyperbolic_end_example, generate_hyperbolic_surface_longer_hyperbolic_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example]
     # return [generate_cusp_end_example]
     # return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_end_example, generate_hyperbolic_surface_longer_end_example]

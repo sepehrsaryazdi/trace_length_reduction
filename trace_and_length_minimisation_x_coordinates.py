@@ -101,10 +101,25 @@ def calculate_geodesic_length(gamma):
     return calculate_geodesic_length_fast(gamma)
 
 
-def get_bounds_algorithm(f):
+def trmax(x):
     """
-    Returns [k0,k1] such that f([k0,k1]) >= 0 if such values exist, otherwise it returns an empty array. Assumes f is strictly concave down and has a global maximiser.
+    Returns trmax function
     """
+    return (sp.exp(x)+2)*sp.exp(-x/sp.Number(3))
+
+def get_bounds(alpha,beta,objective,move, delta=0):
+    """
+    Constructs bounds [k0,k1] such that the complement [k0,k1] necessarily guarantees the values are negative. If no values exist, it returns an empty array. Assumes the value of trace is strictly concave up and has a global minimiser.
+    """
+    objective_function, objective_label = objective
+
+    if objective_label == 'trace':
+        s = sp.trace(beta) + delta
+    else:
+        s = trmax(objective_function(beta) + delta) # lmin^(-1)(l(beta))
+
+    def f(k): # strictly concave function
+        return s - sp.trace(move(alpha,beta,k)[1])
     middle_value = f(0)
     k1 = 0
     k0 = 0
@@ -143,9 +158,12 @@ def get_bounds_algorithm(f):
 
 
 
-def main_algorithm(alpha, beta, objective_function, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
+
+
+    objective_function, objective_label = objective
 
     if objective_function(alpha) < objective_function(beta):
         alpha,beta = beta,alpha
@@ -156,29 +174,42 @@ def main_algorithm(alpha, beta, objective_function, visited_generators=[],expres
 
     def f(k):
         return objective_difference(*X_k(alpha,beta,k))
-    
+
     def g(k):
         return objective_difference(*Y_k(alpha,beta,k))
-
 
     visited_generators.append((alpha,beta))
     
     candidate_moves = [] # elements are tuples with powers, then X_k or Y_k
     
-    bounds = get_bounds_algorithm(f)
+    bounds = get_bounds(alpha,beta, objective, X_k)
 
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
-        k_vals =  np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
+
+        positive_k_vals = []
+        for k in k_vals:
+            if f(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, X_k, f(k)))
-    bounds = get_bounds_algorithm(g)
+    
+    bounds = get_bounds(alpha,beta, objective, Y_k)
+
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        
+        positive_k_vals = []
+        for k in k_vals:
+            if g(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, Y_k, g(k)))
 
     if verbose:   
@@ -197,7 +228,7 @@ def main_algorithm(alpha, beta, objective_function, visited_generators=[],expres
             print("algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
 
 
-        alpha_prime, beta_prime, visited_generators,expression = main_algorithm(*move_function(alpha,beta, k), objective_function,visited_generators, expression)
+        alpha_prime, beta_prime, visited_generators,expression = main_algorithm(*move_function(alpha,beta, k), objective,visited_generators, expression)
 
     else:
         alpha_prime,beta_prime = alpha,beta
@@ -217,7 +248,7 @@ def main_algorithm(alpha, beta, objective_function, visited_generators=[],expres
 
     candidate_moves = [] # elements are tuples with powers, then X_k or Y_k
     
-    bounds = get_bounds_algorithm(f)
+    bounds = get_bounds(alpha_prime,beta_prime,objective, X_k, delta=objective_difference(alpha_prime,beta_prime))
 
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
@@ -225,7 +256,8 @@ def main_algorithm(alpha, beta, objective_function, visited_generators=[],expres
         if len(k_vals):
             for k in k_vals:
                 candidate_moves.append((k, X_k, f(k)))
-    bounds = get_bounds_algorithm(g)
+
+    bounds = get_bounds(alpha_prime,beta_prime,objective,Y_k,delta=objective_difference(alpha_prime,beta_prime))
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
@@ -480,18 +512,17 @@ for example_function in give_all_examples():
 
     alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
 
-
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
 
-    alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, lambda x : sp.trace(x), [])
+    alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, (lambda x : sp.trace(x),'trace'), [])
 
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
-    metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["Minimizer End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
     metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
@@ -513,14 +544,14 @@ for example_function in give_all_examples():
 
     print('---------------------------------')
 
-    alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, calculate_geodesic_length, [])
+    alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, (calculate_geodesic_length,'length'), [])
 
     
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\ell$" if latex else "length"]
-    metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["Minimizer End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
     metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
@@ -547,7 +578,7 @@ results = results.round(2)
 
 columns = np.array(results.columns)
 
-results = pd.DataFrame(results, columns=list(["End","Minimizer", "Objective"])+list(columns[:-3]))
+results = pd.DataFrame(results, columns=list(["End","Minimizer End", "Objective"])+list(columns[:-3]))
 
 results.to_csv('./examples/results.csv', sep=',', index=False)
 
