@@ -416,36 +416,49 @@ def plot_eigenvalues_and_traces(alpha, beta, visited_generators_trace, visited_g
         plt.savefig(f'./examples/{save_file_name}.pdf')
 
 
-def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e12, e21, e20, e02):
+def rational_to_latex_fraction(rational):
+    string_split = str(rational).rsplit("/")
+    if len(string_split)>1:
+        return "\\frac" + "{" + string_split[0] + "}{" + string_split[1] + "}"
+    else:
+        return str(rational)
 
-    return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
-            "Returned Generators (A',B')": str(expression).replace("a","A").replace("b","B"), 
-                "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
-                "length(A')":calculate_geodesic_length(alpha_returned),
-                "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
-                "length(B')":calculate_geodesic_length(beta_returned),
-                "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
-                "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
-                "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
-                "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
-                "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex=False):
+
+    if not latex:
+        return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
+                "(A',B')": str(expression).replace("a","A").replace("b","B"), 
+                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                    "length(A')":calculate_geodesic_length(alpha_returned),
+                    "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
+                    "length(B')":calculate_geodesic_length(beta_returned),
+                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                    "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+    
+    else:
+        coords = (t,t_prime, e01, e10, e12, e21, e20, e02)
+        return {'$\mathcal{X}$-coordinates': "$" + str(tuple([rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
+                "$(A',B')$": "$" + str(expression).replace("a","A").replace("b","B").replace("**","^").replace("*","") + "$", 
+                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
+                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                    "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
+                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                    "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+        
 
 
-results = pd.DataFrame({'Example Type':[],
-                        'Objective Function':[],
-                        'X-coordinates':[],
-                        "Returned Generators (A',B')":[],
-                        "tr(A')":[],
-                        "length(A')":[],
-                        "tr(B')":[],
-                        "length(B')":[],
-                        "tr(A'B')":[],
-                        "length(A'B')":[],
-                        "tr(A'(B')^(-1))":[],
-                        "length(A'(B')^(-1))":[],
-                        "tr([A',B'])":[],
-                        "length([A',B'])":[]})
+results = pd.DataFrame()
+
+latex = False
 
 
 
@@ -474,11 +487,12 @@ for example_function in give_all_examples():
 
     alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, lambda x : sp.trace(x), [])
 
-    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02)
+    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
-    metrics["Objective Function"] = ["tr"]
-    metrics["Example Type"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].title()]    
+    metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
+    metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["End"] = [example_function.__name__.replace("generate","").replace("hyperbolic","funnel").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
 
@@ -501,11 +515,13 @@ for example_function in give_all_examples():
 
     alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, calculate_geodesic_length, [])
 
-    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02)
+    
+    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
-    metrics["Objective Function"] = ["length"]
-    metrics["Example Type"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].title()]    
+    metrics["Objective"] = ["$\\ell$" if latex else "length"]
+    metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["End"] = [example_function.__name__.replace("generate","").replace("hyperbolic","funnel").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
 
@@ -528,6 +544,37 @@ for example_function in give_all_examples():
     plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
 results = results.round(2)
+
+columns = np.array(results.columns)
+
+results = pd.DataFrame(results, columns=list(["End","Minimizer", "Objective"])+list(columns[:-3]))
+
 results.to_csv('./examples/results.csv', sep=',', index=False)
+
+
+
+def display_results_latex():
+    results = pd.read_csv('./examples/results.csv')
+    column_names = results.columns.to_numpy()
+
+    results = np.vstack([column_names, results.to_numpy()])
+
+    results = results.T
+
+    # results = np.hstack([results[:,:1],results[:, 7:]])
+
+    # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+
+    table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results[0,:]) + "|}\\hline\n"
+    for row in results:
+        table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+
+    table_string+="\\end{tabular}\n\\end{table}"
+    
+    print(table_string)
+
+if latex:
+    display_results_latex()
+
 
 plt.show()
