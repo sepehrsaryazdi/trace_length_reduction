@@ -4,6 +4,7 @@ from sympy import N
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import warnings
+import pandas as pd
 
 from examples.generation_functions import give_all_examples
 
@@ -274,7 +275,7 @@ def apply_random_moves(alpha,beta, display=False):
 
 
 
-def plot_eigenvalues_and_traces(alpha, beta, visited_generators_trace, visited_generators_length, num_distinct_random_group_elements=100):
+def plot_eigenvalues_and_traces(alpha, beta, visited_generators_trace, visited_generators_length, save_file_name=None,num_distinct_random_group_elements=100, blocking=True):
     """
     Plots the eigenvalues of elements in the group < alpha, beta > and displays them on the length and trace plot, along with the paths taken by the length and trace algorithmsa
     """
@@ -408,7 +409,43 @@ def plot_eigenvalues_and_traces(alpha, beta, visited_generators_trace, visited_g
     ax.set_ylabel(r'$l(\gamma)$',  fontsize=50)
     ax.legend(fontsize=19,loc='upper left')
     plt.title(r"$\mathcal{X}$-Coordinates: " + str((t,t_prime, e01, e10, e12, e21, e20, e02)), fontsize=30)
-    plt.show()
+    
+    plt.show(block=blocking)
+    plt.pause(0.01)
+    if save_file_name:
+        plt.savefig(f'./examples/{save_file_name}.pdf')
+
+
+def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e12, e21, e20, e02):
+
+    return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
+            "Returned Generators (A',B')": str(expression).replace("a","A").replace("b","B"), 
+                "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                "length(A')":calculate_geodesic_length(alpha_returned),
+                "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
+                "length(B')":calculate_geodesic_length(beta_returned),
+                "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+
+
+results = pd.DataFrame({'Example Type':[],
+                        'Objective Function':[],
+                        'X-coordinates':[],
+                        "Returned Generators (A',B')":[],
+                        "tr(A')":[],
+                        "length(A')":[],
+                        "tr(B')":[],
+                        "length(B')":[],
+                        "tr(A'B')":[],
+                        "length(A'B')":[],
+                        "tr(A'(B')^(-1))":[],
+                        "length(A'(B')^(-1))":[],
+                        "tr([A',B'])":[],
+                        "length([A',B'])":[]})
 
 
 
@@ -437,12 +474,17 @@ for example_function in give_all_examples():
 
     alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, lambda x : sp.trace(x), [])
 
-    alpha_length, beta_length = calculate_lengths(alpha_returned, beta_returned)
+    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02)
+    for key in metrics.keys():
+        metrics[key] = [metrics[key]]
+    metrics["Objective Function"] = ["tr"]
+    metrics["Example Type"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].title()]    
+    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
 
     print("----TRACE REDUCTION RESULTS----")
-    print('X coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
-    print('Returned Generators:', str(expression).replace("a","A").replace("b","B"))
+    print('X-coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
+    print("Returned Generators (A',B'):", str(expression).replace("a","A").replace("b","B"))
     print("tr(A'):", sp.trace(alpha_returned).evalf(),"\n",
         "length(A'):",calculate_geodesic_length(alpha_returned),"\n",
         "tr(B'):",sp.trace(beta_returned).evalf(),"\n",
@@ -459,10 +501,17 @@ for example_function in give_all_examples():
 
     alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, calculate_geodesic_length, [])
 
+    metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02)
+    for key in metrics.keys():
+        metrics[key] = [metrics[key]]
+    metrics["Objective Function"] = ["length"]
+    metrics["Example Type"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].title()]    
+    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
+
 
     print("----LENGTH REDUCTION RESULTS----")
-    print('X coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
-    print('Returned Generators:', str(expression).replace("a","A").replace("b","B"))
+    print('X-coordinates:', (t,t_prime, e01, e10, e12, e21, e20, e02))
+    print("Returned Generators (A',B'):", str(expression).replace("a","A").replace("b","B"))
     print("tr(A'):", sp.trace(alpha_returned).evalf(),"\n",
         "length(A'):",calculate_geodesic_length(alpha_returned),"\n",
         "tr(B'):",sp.trace(beta_returned).evalf(),"\n",
@@ -476,5 +525,9 @@ for example_function in give_all_examples():
             )
     print('---------------------------------')
 
+    plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
-    plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100)
+results = results.round(2)
+results.to_csv('./examples/results.csv', sep=',', index=False)
+
+plt.show()
