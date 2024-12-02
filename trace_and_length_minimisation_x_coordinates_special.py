@@ -141,9 +141,18 @@ def get_bounds_algorithm(f):
 
 random_integers = [np.random.randint(1,10) for i in range(16)]
 
-random_integers = [3,4, 4,5, 1,3, 1,2, 4,1, 2,9, 8,1, 7,6] # infinite volume example
+# random_integers = [1,1]*2 +[20, 10]*6 # special end shorter
+random_integers = [1,1]*2 +[15, 10]*6 # special end longer
+
 
 random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
+
+# random_rationals[7] = sp.Number(1)/(random_rationals[2]*random_rationals[3]*random_rationals[4]*random_rationals[5]*random_rationals[6])
+random_rationals[2]=sp.Number(1)/random_rationals[3]
+random_rationals[4]=sp.Number(1)/random_rationals[5]
+random_rationals[6]=sp.Number(1)/random_rationals[7]
+
+random_rationals[1] = sp.Number(1)/(sp.Number(2)*random_rationals[0])
 
 t = random_rationals[0]**3
 t_prime = random_rationals[1]**3
@@ -154,7 +163,12 @@ e21 = random_rationals[5]**3
 e20 = random_rationals[6]**3
 e02 = random_rationals[7]**3
 
+
+print(e01*e10*e12*e21*e20*e02)
+print((t*t_prime)**3*e01*e10*e12*e21*e20*e02 ,(t*t_prime)**3*e01*e10*e12*e21*e20*e02 < 1)
+
 alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
+
 
 def main_algorithm(alpha, beta, objective_function, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
@@ -407,16 +421,21 @@ def plot_eigenvalues_and_traces(alpha, beta, visited_generators_trace, visited_g
         length_traces_visited.append(sp.trace(beta).evalf())
         length_lengths_visited.append(calculate_geodesic_length(beta))
 
+    peripheral = commutator(alpha_original, beta_original)
+    ax.scatter(sp.trace(peripheral), calculate_geodesic_length(peripheral), c='orange',label='Peripheral Element')
+
+
     ax.plot(length_traces_visited, length_lengths_visited, c='cyan', label='Generalised Length Reduction Procedure Path')
     ax.scatter(length_traces_visited, length_lengths_visited, c='cyan')
     ax.tick_params(axis='both', which='major', labelsize=22)
     ax.plot(trace_traces_visited, trace_lengths_visited, c='green', linestyle='dashed', label='Generalised Trace Reduction Procedure Path')
     ax.scatter(trace_traces_visited, trace_lengths_visited, c='green')
     ax.scatter([length_traces_visited[-1]], [length_lengths_visited[-1]], c='blue', label='Length Reduction Procedure Terminated Representative')
-    ax.scatter([trace_traces_visited[-1]], [trace_lengths_visited[-1]], c='purple', label='Trace Reduction Procedure Terminated Representative')
+    ax.scatter([trace_traces_visited[-1]], [trace_lengths_visited[-1]], c='purple', marker="v", label='Trace Reduction Procedure Terminated Representative')
     ax.set_xlabel(r'tr$(\gamma)$',  fontsize=50)
     ax.set_ylabel(r'$l(\gamma)$',  fontsize=50)
     ax.legend(fontsize=19,loc='upper left')
+    plt.title(r"$\mathcal{X}$-Coordinates: " + str((t,t_prime, e01, e10, e12, e21, e20, e02)), fontsize=30)
     plt.show()
 
 
