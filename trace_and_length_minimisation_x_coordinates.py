@@ -492,7 +492,7 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
     metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("hyperbolic","funnel").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
 
@@ -521,7 +521,7 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\ell$" if latex else "length"]
     metrics["Minimizer"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("hyperbolic","funnel").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
 
