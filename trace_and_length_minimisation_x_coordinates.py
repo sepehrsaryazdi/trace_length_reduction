@@ -107,55 +107,85 @@ def trmax(x):
     """
     return (sp.exp(x)+2)*sp.exp(-x/sp.Number(3))
 
+
+def diagonalise_in_order(B, precision=1000):
+    """
+    Assumes B hyperbolic and diagonalises B such that B = PDP^(-1) and D = diag(l1,l2,l3), l1 > l2 > l3.
+    """
+    ls, vs = [],[]
+    eigenvectors = B.eigenvects()
+    assert len(eigenvectors) == 3, "B does not have 3 distinct eigenvectors"
+    for eigenvector in B.eigenvects():
+        ls.append(eigenvector[0])
+        vs.append(eigenvector[2][0])
+    ls_precision = [N(ls[i],precision).as_real_imag()[0] for i in range(3)]
+    argsort = np.argsort(ls_precision)[::-1] # sorts eigenvalues such that first is largest
+    ls = np.array(ls)[argsort]
+    vs = np.array(vs)[argsort]
+    D = sp.Matrix([[ls[0],0,0],[0,ls[1],0],[0,0,ls[2]]])
+    P = sp.Matrix(np.hstack([*vs]))
+    P,D = N(P,precision).as_real_imag()[0], N(D,precision).as_real_imag()[0] # converts to real matrix
+   
+    # print(np.isclose(np.array(P*D*(P.inv()),dtype=np.float64), np.array(N(B,precision),dtype=np.float64)))
+
+    return (P,D)
+
+def get_k0_k1(A,B, s, move):
+
+    P,D = diagonalise_in_order(B)
+
+    if move == Y_k:
+        A = A.inv()
+
+    A_tilde = P.inv()*A*P
+
+    a,b,c = A_tilde[0,0], A_tilde[1,1], A_tilde[2,2]
+    
+    l1,l2,l3 = D[0,0], D[1,1], D[2,2]
+
+    if b!=0:
+        k1 = int(sp.ceiling(sp.Max(
+            sp.log(a/2/(2*sp.Abs(b)))/sp.log(l2/l1),
+            sp.log(a/2/(2*c))/sp.log(l3/l1),
+            sp.log(s/(a/2))/sp.log(l1))))
+        k0 = -int(sp.ceiling(sp.Max(
+            sp.log(c/2/(2*sp.Abs(b)))/sp.log(l3/l2),
+            sp.log(c/2/(2*a))/sp.log(l3/l1),
+            sp.log(s/(c/2))/sp.log(1/l3))))
+    
+    else:
+        k1 = int(sp.ceiling(sp.Max(
+            sp.log(a/2/c)/sp.log(l3/l1),
+            sp.log(s/(a/2))/sp.log(l1))
+        ))
+        k0 = -int(sp.ceiling(sp.Max(
+            sp.log(c/2/a)/sp.log(l3/l1),
+            sp.log(s/(c/2))/sp.log(1/l3))
+        ))
+
+    return [k0,k1]
+
+
+
 def get_bounds(alpha,beta,objective,move, delta=0):
     """
     Constructs bounds [k0,k1] such that the complement [k0,k1] necessarily guarantees the values are negative. If no values exist, it returns an empty array. Assumes the value of trace is strictly concave up and has a global minimiser.
     """
     objective_function, objective_label = objective
 
+
     if objective_label == 'trace':
         s = sp.trace(beta) + delta
     else:
         s = trmax(objective_function(beta) + delta) # lmin^(-1)(l(beta))
 
-    def f(k): # strictly concave function
+
+    k0,k1 = get_k0_k1(alpha,beta,s,move)
+
+    def f(k):
         return s - sp.trace(move(alpha,beta,k)[1])
-    middle_value = f(0)
-    k1 = 0
-    k0 = 0
-    while f(k1) >= middle_value:
-        k1 += 1
-    while f(k0) >= middle_value:
-        k0 -=1
-
-    # at this point, [k0,k1] contains the maximiser of f. now may need to shrink or extend the domain until f(k) >= 0 <=> k in [k0,k1]
     
-    k_vals = np.linspace(k0,k1,k1-k0+1, dtype=np.int64)
-    f_k_vals = np.array([f(k) for k in k_vals])
-    k_pos_vals = k_vals[f_k_vals > 0]
-    if len(k_pos_vals) == 0:
-        return [] # no values will be zero
-    
-    k0,k1 = np.min(k_pos_vals), np.max(k_pos_vals) # this set contains the minimiser and satisfies f(k) >= 0 for all k in [k0,k1]. Now can extend:
-    finished_right = False
-    k1_right = k1
-    while not finished_right:
-        if f(k1_right+1) >= 0:
-            k1_right+=1
-        else:
-            finished_right = True
-    
-    finished_left = False
-    k0_left = k0
-    while not finished_left:
-        if f(k0_left-1) >= 0:
-            k0_left-=1
-        else:
-            finished_left = True
-    
-    k0,k1 = k0_left, k1_right
-    return [k0,k1]
-
+    return [k0, k1]
 
 
 def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
@@ -522,7 +552,7 @@ for example_function in give_all_examples():
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
-    metrics["Minimizer End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
     metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
@@ -551,7 +581,7 @@ for example_function in give_all_examples():
     for key in metrics.keys():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\ell$" if latex else "length"]
-    metrics["Minimizer End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
+    metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
     metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
     results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
 
@@ -578,7 +608,7 @@ results = results.round(2)
 
 columns = np.array(results.columns)
 
-results = pd.DataFrame(results, columns=list(["End","Minimizer End", "Objective"])+list(columns[:-3]))
+results = pd.DataFrame(results, columns=list(["End","Shorter End", "Objective"])+list(columns[:-3]))
 
 results.to_csv('./examples/results.csv', sep=',', index=False)
 
