@@ -92,13 +92,13 @@ def calculate_geodesic_length_fast(gamma): # faster implementation of length tha
     gamma_length = np.log(np.float64(max(gamma_eigenvalues)/min(gamma_eigenvalues)))
     return gamma_length
 
-def calculate_geodesic_length_high_precision(gamma,precision=1000): # slower implementation that maintains high precision and only rounds at the end
+def calculate_geodesic_length_high_precision(gamma,precision=100): # slower implementation that maintains high precision and only rounds at the end
     gamma_eigenvalues = list(gamma.eigenvals())
-    eigenvalues_to_precision = [N(gamma_eigenvalues[i],precision).as_real_imag()[0] for i in range(3)] # note that the real part is taken, the imaginary part is theoretically zero and negligible for a given rounded number.
+    eigenvalues_to_precision = [N(gamma_eigenvalues[i],precision).as_real_imag()[0] for i in range(len(gamma_eigenvalues))] # note that the real part is taken, the imaginary part is theoretically zero and negligible for a given rounded number.
     return np.float64(sp.log(sp.Max(*eigenvalues_to_precision)/sp.Min(*eigenvalues_to_precision)))
 
 def calculate_geodesic_length(gamma):
-    return calculate_geodesic_length_fast(gamma)
+    return calculate_geodesic_length_high_precision(gamma)
 
 
 def trmax(x):
@@ -108,7 +108,7 @@ def trmax(x):
     return (sp.exp(x)+2)*sp.exp(-x/sp.Number(3))
 
 
-def diagonalise_in_order(B, precision=1000):
+def diagonalise_in_order(B, precision=100):
     """
     Assumes B hyperbolic and diagonalises B such that B = PDP^(-1) and D = diag(l1,l2,l3), l1 > l2 > l3.
     """
