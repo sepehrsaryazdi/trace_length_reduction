@@ -1,4 +1,4 @@
-# Trace Length Reduction Algorithms
+# Trace-Length Reduction Algorithm Implementation
 
 The extended algorithms for length and trace reduction on convex projective surfaces are presented in this repository. Their implementations are done symbolically through the [SymPy](https://www.sympy.org/en/index.html) library. The only potential technical issue lies in the calculation of the eigenvalues for 3 x 3 matrices, which relies on the cubic root formula in the SymPy implementation. This means that the eigenvalues will be rounded to a certain precision, although this can be set arbitrarily high in the implementation.
 
@@ -40,9 +40,9 @@ python3 trace_and_length_minimisation_x_coordinates.py
 After running, the canonical generators A, B will be printed out in LaTeX code. Note that these are not necessarily ordered by length or trace.
 
 
-## Expected Output
+## Example Output
 
-The expected output is given below.
+An example output is given below.
 
 ```
 A = \begin{pmatrix} 2680/7 & -22261/400 & 196/675 \\ -2795/14 & 91827/2800 & -196/675 \\ 245/2 & -9261/400 & 196/675 \end{pmatrix}
