@@ -144,21 +144,21 @@ def get_k0_k1(A,B, s, move):
     l1,l2,l3 = D[0,0], D[1,1], D[2,2]
 
     if b!=0:
-        k1 = int(sp.ceiling(sp.Max(
+        k1 = int(sp.ceiling(sp.Max(0,
             sp.log(a/2/(2*sp.Abs(b)))/sp.log(l2/l1),
             sp.log(a/2/(2*c))/sp.log(l3/l1),
             sp.log(s/(a/2))/sp.log(l1))))
-        k0 = -int(sp.ceiling(sp.Max(
+        k0 = -int(sp.ceiling(sp.Max(0,
             sp.log(c/2/(2*sp.Abs(b)))/sp.log(l3/l2),
             sp.log(c/2/(2*a))/sp.log(l3/l1),
             sp.log(s/(c/2))/sp.log(1/l3))))
     
     else:
-        k1 = int(sp.ceiling(sp.Max(
+        k1 = int(sp.ceiling(sp.Max(0,
             sp.log(a/2/c)/sp.log(l3/l1),
             sp.log(s/(a/2))/sp.log(l1))
         ))
-        k0 = -int(sp.ceiling(sp.Max(
+        k0 = -int(sp.ceiling(sp.Max(0,
             sp.log(c/2/a)/sp.log(l3/l1),
             sp.log(s/(c/2))/sp.log(1/l3))
         ))
