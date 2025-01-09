@@ -541,7 +541,6 @@ for example_function in give_all_examples():
     print('Y =',(t*t_prime)**3*e01*e10*e12*e21*e20*e02)
 
     alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
-
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
