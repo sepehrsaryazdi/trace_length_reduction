@@ -12,8 +12,9 @@ setup(
    author='Sepehr Saryazdi',
    author_email='sepehr.saryazdi@sydney.edu.au',
    url="https://github.com/sepehrsaryazdi/trace_length_reduction",
-   packages=[''],  #same as name
-   package_dir = {"": "trace_length_reduction"},
+   package_dir = {
+            'trace_length_reduction': 'trace_length_reduction'},
+   packages=['trace_length_reduction'],
    install_requires=['wheel', 'numpy', 'sympy', 'matplotlib', 'pandas'], #external packages as dependencies
    scripts=['main.py']
 )
