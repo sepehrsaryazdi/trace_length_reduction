@@ -1,4 +1,4 @@
 import sympy as sp
-from src.reduction_classes import XCoords
+from trace_length_reduction.reduction_classes import XCoords
 
 print(XCoords([sp.Number(8)]*8))

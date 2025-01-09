@@ -1,5 +1,5 @@
 import unittest
-from src.reduction_classes import XCoords
+from trace_length_reduction.reduction_classes import XCoords
 import sympy as sp
 import numpy as np
 
