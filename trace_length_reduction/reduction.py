@@ -83,23 +83,14 @@ class XCoords():
         return (self.coords, self.cube_roots)
 
 
-class OncePuncturedTorusGenerators():
-    def __init__(self, x):
-        assert isinstance(x, XCoords), "Error: x must be an instance of XCoords."
-        self.x = x
-        coords, cube_roots = x.get_coords()
-        self.alpha,self.beta = compute_translation_matrix_torus(*coords, *cube_roots)
-
-    def get_generators(self):
-        return (self.alpha,self.beta)
-
 class ReductionResults():
     def __init__(self):
         pass
 
-class LengthTraceObj():
+class TraceLengthObj():
     def __init__(self, x):
         assert isinstance(x, XCoords), "Error: x must be an instance of XCoords."
+        coords, cube_roots = x.get_coords()
+        self.generators = compute_translation_matrix_torus(*coords, *cube_roots)
 
-
-OncePuncturedTorusGenerators(XCoords([sp.Number(1)]*8))
+TraceLengthObj(XCoords([sp.Number(1)]*8))
