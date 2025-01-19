@@ -521,7 +521,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
 results_tr = pd.DataFrame()
 results_l = pd.DataFrame()
 
-latex = False
+latex = True
 
 
 
@@ -609,6 +609,8 @@ results_tr = results_tr.round(2)
 results_l = results_l.round(2)
 
 
+
+
 columns_tr = np.array(results_tr.columns)
 results_tr = pd.DataFrame(results_tr, columns=list(["Label","Shorter End", "Objective"])+list(columns_tr[:-3]))
 results_tr.to_csv('./examples/results_tr.csv', sep=',', index=False)
@@ -619,25 +621,83 @@ results_l.to_csv('./examples/results_l.csv', sep=',', index=False)
 
 
 
-def display_results_latex():
-    results = pd.read_csv('./examples/results.csv')
-    column_names = results.columns.to_numpy()
+def colour_results(results):
+    if not latex:
+        starting_column_index = np.where(results.columns == "tr(B')")[0][0]
+    else:
+        starting_column_index = np.where(results.columns == "$\\text{tr}(B')$")[0][0]
+    ending_column_index = len(results.columns)-1
 
-    results = np.vstack([column_names, results.to_numpy()])
+    numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
 
-    results = results.T
+    numbers_matrix_trace = numbers_matrix[:, :5]
+    numbers_matrix_length = numbers_matrix[:, 5:]
 
-    # results = np.hstack([results[:,:1],results[:, 7:]])
+    colour_matrix = []
 
-    # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+    colour_values = ["\\cellcolor{green!50}", "\\cellcolor{orange!50}", "\\cellcolor{red!25}", "\\cellcolor{red!50}"]
 
-    table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results[0,:]) + "|}\\hline\n"
-    for row in results:
-        table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+    for i in range(len(numbers_matrix_trace)):
 
-    table_string+="\\end{tabular}\n\\end{table}"
+        colours_matrix_row_trace = [""]*5
+        colours_matrix_row_length = [""]*5
+
+        number_row_trace = np.array(numbers_matrix_trace[i])
+        number_row_length = np.array(numbers_matrix_length[i])
+
+        number_row_trace[number_row_trace == 3] = np.inf
+        number_row_length[number_row_length == 0] = np.inf
+
+        sorted_trace_index = np.argsort(number_row_trace)
+        sorted_length_index = np.argsort(number_row_length)
+
+        for j in range(4):
+            colours_matrix_row_trace[sorted_trace_index[j]] = colour_values[j]
+            colours_matrix_row_length[sorted_length_index[j]] = colour_values[j]
+        
+        # check that peripheral is in smallest 3 list
+        if colours_matrix_row_trace[-1] not in colour_values[:3]:
+            colours_matrix_row_trace[sorted_trace_index[3]] = ""
+        if colours_matrix_row_length[-1] not in colour_values[:3]:
+            colours_matrix_row_length[sorted_length_index[3]] = ""
+
+        colour_matrix.append(colours_matrix_row_trace + colours_matrix_row_length)
+    results_copy = pd.DataFrame(results)
+
+    for j in range(starting_column_index, ending_column_index+1):
+        for i in range(len(results)):
+            results_copy.iloc[i,j] = colour_matrix[i][j-starting_column_index] + str(results_copy.iloc[i,j])
     
-    print(table_string)
+    return results_copy
+
+
+def display_results_latex():
+
+    objectives = ['Trace', 'Length']
+    directories = ['tr', 'l']
+
+    for i in range(len(objectives)):
+        results = pd.read_csv(f'./examples/results_{directories[i]}.csv')
+
+        results = colour_results(results)
+
+        column_names = results.columns.to_numpy()
+
+        results = np.vstack([column_names, results.to_numpy()])
+
+        results = results.T
+
+        # results = np.hstack([results[:,:1],results[:, 7:]])
+
+        # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+
+        table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results[0,:]) + "|}\\hline\n"
+        for row in results:
+            table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+
+        table_string+="\\end{tabular}\n\\caption{" + objectives[i] + " Minimization Examples}\\end{table}"
+    
+        print(table_string)
 
 if latex:
     display_results_latex()
