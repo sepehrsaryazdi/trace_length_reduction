@@ -489,36 +489,37 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
 
     if not latex:
         return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
-                "(A',B')": str(expression).replace("a","A").replace("b","B"), 
-                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
-                    "length(A')":calculate_geodesic_length(alpha_returned),
+                "(A',B')": str(expression).replace("a","A").replace("b","B"),
                     "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
-                    "length(B')":calculate_geodesic_length(beta_returned),
-                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
                     "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
-                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "length(B')":calculate_geodesic_length(beta_returned),
+                    "length(A')":calculate_geodesic_length(alpha_returned),
+                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
     
     else:
         coords = (t,t_prime, e01, e10, e12, e21, e20, e02)
         return {'$\mathcal{X}$-coordinates': "$" + str(tuple([rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
                 "$(A',B')$": "$" + str(expression).replace("a","A").replace("b","B").replace("**","^").replace("*","") + "$", 
-                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
-                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
                     "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
-                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
                     "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
                     "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
-                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
         
 
 
-results = pd.DataFrame()
+results_tr = pd.DataFrame()
+results_l = pd.DataFrame()
 
 latex = False
 
@@ -553,8 +554,8 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
     metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
-    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
+    metrics["Label"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    results_tr = pd.concat([results_tr, pd.DataFrame(metrics)], ignore_index=True)
 
 
     print("----TRACE REDUCTION RESULTS----")
@@ -582,8 +583,8 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\ell$" if latex else "length"]
     metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
-    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
+    metrics["Label"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    results_l = pd.concat([results_l, pd.DataFrame(metrics)], ignore_index=True)
 
 
     print("----LENGTH REDUCTION RESULTS----")
@@ -604,13 +605,17 @@ for example_function in give_all_examples():
 
     plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
-results = results.round(2)
+results_tr = results_tr.round(2)
+results_l = results_l.round(2)
 
-columns = np.array(results.columns)
 
-results = pd.DataFrame(results, columns=list(["End","Shorter End", "Objective"])+list(columns[:-3]))
+columns_tr = np.array(results_tr.columns)
+results_tr = pd.DataFrame(results_tr, columns=list(["Label","Shorter End", "Objective"])+list(columns_tr[:-3]))
+results_tr.to_csv('./examples/results_tr.csv', sep=',', index=False)
 
-results.to_csv('./examples/results.csv', sep=',', index=False)
+columns_l = np.array(results_l.columns)
+results_l = pd.DataFrame(results_l, columns=list(["Label","Shorter End", "Objective"])+list(columns_l[:-3]))
+results_l.to_csv('./examples/results_l.csv', sep=',', index=False)
 
 
 
