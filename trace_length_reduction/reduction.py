@@ -297,6 +297,7 @@ class XCoords():
         return (self.coords, self.cube_roots)
 
 class ReductionResults():
+    # TO DO: add metrics, expressions and post processing results in a self-contained report, with options to render as LaTeX
     def __init__(self):
         pass
 
@@ -320,6 +321,7 @@ class TraceLengthReductionInterface():
     
     def trace_reduction(self, verbose=False):
         alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(*self.generators, Objective('trace').get_objective(), verbose=verbose)
+        # print(expression)
         # print(visited_generators_trace)
 
     def length_reduction(self, verbose=False):
@@ -333,6 +335,6 @@ class TraceLengthReductionInterface():
 # random_rationals[6]=sp.Number(1)/random_rationals[7]
 # random_rationals[1] = sp.Number(1)/(sp.Number(2)*random_rationals[0])
 
-# # TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
+# # # TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
 
 # TraceLengthReductionInterface(XCoords([sp.Number(1)]*8)).trace_reduction()
