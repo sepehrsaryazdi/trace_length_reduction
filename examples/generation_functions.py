@@ -71,7 +71,7 @@ def generate_longer_special_end_example():
 
 def generate_inbetween_hyperbolic_end_example():
     r=5
-    s=10 # s=5
+    s=5 # s=5
     random_integers = [1,1]*2 +[1,1] + [s*5+2*r,s*10+3*r] + [1,1] + [s*5+2*r, s*10+3*r] + [1,1] + [s*5+2*r, s*10+3*r] # hyperbolic end shorter
     # random_integers = [1,1]*2 +[10, 10]*6 # hyperbolic end longer
     random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
@@ -83,5 +83,5 @@ def generate_inbetween_hyperbolic_end_example():
 
 def give_all_examples():
     return [generate_arithmetic_torus_shorter_cusp_example, generate_hyperbolic_surface_shorter_hyperbolic_end_example, generate_hyperbolic_surface_longer_hyperbolic_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example, generate_inbetween_hyperbolic_end_example]
-    # return [generate_hyperbolic_surface_shorter_hyperbolic_end_example]
+    # return [generate_inbetween_hyperbolic_end_example]
     # return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_end_example, generate_hyperbolic_surface_longer_end_example]

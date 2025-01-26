@@ -187,8 +187,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-
-def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=True):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
@@ -283,16 +282,27 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals =  np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        positive_k_vals = []
+        for k in k_vals:
+            if f(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, X_k, f(k)))
 
     bounds = get_bounds(alpha_prime,beta_prime,objective,Y_k,delta=objective_difference(alpha_prime,beta_prime))
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        
+        positive_k_vals = []
+        for k in k_vals:
+            if g(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, Y_k, g(k)))
 
     if verbose:        
@@ -305,7 +315,8 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         k = best_move[0]
         move_function = best_move[1]
 
-        expression = X_k(*move_function(expression[0],expression[1], k),0)
+        print('expression before', expression)
+        expression = move_function(expression[0],expression[1], k)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
@@ -317,7 +328,6 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
             print('no candidate post processing moves')
 
     return alpha_prime, beta_prime, visited_generators, expression
-
 
 
 
@@ -521,7 +531,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
 results_tr = pd.DataFrame()
 results_l = pd.DataFrame()
 
-latex = True
+latex = False
 
 
 
