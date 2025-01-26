@@ -66,11 +66,18 @@ def generate_longer_special_end_example():
     return random_rationals
 
 
+def random_rationals():
+    # random_integers = [np.random.randint(1,10) for i in range(16)]
+    random_integers = [1,216, 125,27, 27,125, 27,8, 1,216, 512,1, 125,1, 1,8]
+    random_integers = [sp.Pow(random_integers[i],1/sp.Number(3)) for i in range(len(random_integers))]
+    random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
+    return random_rationals
+
 
 
 
 
 def give_all_examples():
     return [generate_arithmetic_torus_shorter_cusp_example, generate_hyperbolic_surface_shorter_hyperbolic_end_example, generate_hyperbolic_surface_longer_hyperbolic_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example]
-    # return [generate_shorter_special_end_example]
+    # return [random_rationals]
     # return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_end_example, generate_hyperbolic_surface_longer_end_example]

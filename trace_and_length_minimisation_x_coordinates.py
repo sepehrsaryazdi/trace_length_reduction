@@ -187,7 +187,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=True):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
