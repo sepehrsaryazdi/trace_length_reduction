@@ -68,6 +68,9 @@ def X_k(alpha,beta,k):
     return (beta, alpha*(beta**k))
 
 
+def commutator(alpha,beta):
+    return alpha*beta*(alpha.inv())*(beta.inv())
+
 def diagonalise_in_order(B, precision=100):
     """
     Assumes B hyperbolic and diagonalises B such that B = PDP^(-1) and D = diag(l1,l2,l3), l1 > l2 > l3.
@@ -145,14 +148,14 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
 
     objective_function, objective_label = objective
 
-    if objective_function(alpha) < objective_function(beta):
+    if objective_function(alpha) < objective_function(beta): # only called at the start
         alpha,beta = beta,alpha
 
         
@@ -209,13 +212,14 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         k = best_move[0]
         move_function = best_move[1]
 
-        expression = move_function(expression[0],expression[1], k)
+        expressions.append(move_function(expressions[-1][0],expressions[-1][1], k))
+        moves_applied.append((f"{str(move_function).rsplit(" ")[1]}".replace("k", "{" + str(k) + "}"), best_move[-1], False)) # puts string representation of move applied and the objective value difference, i.e. (Y_{-1}, 75409/768)
 
         if verbose:
-            print("algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
+            print("algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expressions[-1])
 
 
-        alpha_prime, beta_prime, visited_generators,expression = main_algorithm(*move_function(alpha,beta, k), objective,visited_generators, expression)
+        alpha_prime, beta_prime, visited_generators,expressions, moves_applied = main_algorithm(*move_function(alpha,beta, k), objective,visited_generators, expressions, moves_applied)
 
     else:
         alpha_prime,beta_prime = alpha,beta
@@ -240,16 +244,26 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals =  np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
+        positive_k_vals = []
+        for k in k_vals:
+            if f(k)>0:
+                positive_k_vals.append(k)
+
         if len(k_vals):
-            for k in k_vals:
+            for k in positive_k_vals:
                 candidate_moves.append((k, X_k, f(k)))
 
     bounds = get_bounds(alpha_prime,beta_prime,objective,Y_k,delta=objective_difference(alpha_prime,beta_prime))
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
+        positive_k_vals = []
+        for k in k_vals:
+            if g(k)>0:
+                positive_k_vals.append(k)
+        
         if len(k_vals):
-            for k in k_vals:
+            for k in positive_k_vals:
                 candidate_moves.append((k, Y_k, g(k)))
 
     if verbose:        
@@ -262,10 +276,12 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         k = best_move[0]
         move_function = best_move[1]
 
-        expression = X_k(*move_function(expression[0],expression[1], k),0)
+        expressions.append(X_k(*move_function(expressions[-1][0],expressions[-1][1], k),0))
+        moves_applied.append(("X_0 \\circ "+f"{str(move_function).rsplit(" ")[1]}".replace("k", "{" + str(k) + "}"), best_move[-1], True)) # move string, objective value, is post processing
+
 
         if verbose:
-            print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
+            print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expressions[-1])
 
         alpha_prime, beta_prime = X_k(*move_function(alpha_prime,beta_prime, k),0)
 
@@ -273,7 +289,7 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         if verbose:
             print('no candidate post processing moves')
 
-    return alpha_prime, beta_prime, visited_generators, expression
+    return alpha_prime, beta_prime, visited_generators, expressions, moves_applied
 
 
 class XCoords():
@@ -296,10 +312,127 @@ class XCoords():
     def get_coords(self):
         return (self.coords, self.cube_roots)
 
+
 class ReductionResults():
     # TO DO: add metrics, expressions and post processing results in a self-contained report, with options to render as LaTeX
-    def __init__(self):
-        pass
+    def __init__(self, xcoords, objective, returned_expression, returned_generators, initial_generators, initial_expression=(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))):
+        assert isinstance(xcoords, XCoords), "Error: xcoords must be an instance of XCoords."
+        assert isinstance(objective, Objective), "Error: objective must be an instance of Objective."
+        # assert reduction_type == "trace" or reduction_type == "length", 'Error: reduction_type must be either length or trace.'
+        assert isinstance(returned_expression, tuple) and len(returned_expression) == 2, "Error: Returned expression must be a tuple with two elements."
+        assert isinstance(returned_expression[0], sp.Expr) and isinstance(returned_expression[1], sp.Expr), "Error: Returned expression must contain sympy expressions."
+        assert isinstance(returned_generators, tuple) and len(returned_generators) == 2, "Error: Returned generators must be a tuple with two elements."
+        assert isinstance(returned_generators[0], sp.Matrix) and isinstance(returned_generators[1], sp.Matrix), "Error: Returned generators must contain sympy Matrices."
+
+        self._report = {
+                        "xcoords": tuple(xcoords.get_coords()[0]),
+                        "xcoords_cube_roots": tuple(xcoords.get_coords()[1]),
+                        "objective": objective.get_objective()[1],
+                        "moves_applied": [],
+                        "expressions": [],
+                        "move_readable_strings": [],
+                        "visited_generators": [],
+                        "initial_expression": initial_expression,
+                        "initial_generators": initial_generators,
+                        "returned_expression": returned_expression,
+                        "returned_generators": returned_generators,
+                    }
+        
+        self.reduction_type_to_latex_hash = {"trace":"\\text{tr}", "length": "\\ell"}
+        self.reduction_type_to_str_hash = {"trace":"tr", "length": "l"}
+
+    def get_objective(self):
+        return self._report["objective"]
+
+    def _move_to_string_rep(self, move_string,objective_value, is_post_processing, expression, latex=True):
+        subscript = self.reduction_type_to_latex_hash[self.get_objective()] if latex else self.reduction_type_to_str_hash[self.get_objective()]
+        move_string_objective_value_str = ""
+
+        if not is_post_processing:
+            move_string_objective_value_str = f"||{move_string}{str(expression)}||" + "_{" + str(subscript) + "} = " + str(objective_value)
+        else:
+            move_string_objective_value_str = f"||{move_string.rsplit("circ ")[1]}{str(expression)}||" + "_{" + str(subscript) + "} + " +  f"||{str(expression)}||" + "_{" + str(subscript) + "} = " + str(objective_value)
+        return f"Move: ${move_string}$, Objective: ${move_string_objective_value_str}$"
+
+    def update_moves_applied(self, moves_applied, expressions, latex=True):
+        
+        assert isinstance(moves_applied, list), "Error: moves_applied must be a list."
+        for i in range(len(moves_applied)):
+            assert isinstance(moves_applied[i], tuple) and len(moves_applied[i]) == 3, "Error: moves_applied must contain tuples with two elements."
+            assert isinstance(moves_applied[i][0], str) and (isinstance(moves_applied[i][1], sp.Expr) or isinstance(moves_applied[i][1], float)) and isinstance(moves_applied[i][2], bool), "Error: each tuple in moves_applied must be a string followed by a sympy expression or float and a boolean."
+        
+        assert isinstance(expressions, list), "Error: expressions must be a list."
+        for i in range(len(expressions)):
+            assert isinstance(expressions[i], tuple) and len(expressions[i]) == 2, "Error: expressions must contain tuples of length 2."
+            assert isinstance(expressions[i][0], sp.Expr) and isinstance(expressions[i][1], sp.Expr), "Error: expressions must contain tuples of sympy expressions."
+
+        move_readable_strings = []
+
+        for i, (move_string, value, is_post_processing) in enumerate(moves_applied):
+            move_string_rep = self._move_to_string_rep(move_string, round(float(value),3), is_post_processing, expressions[i], latex)
+            move_readable_strings.append(move_string_rep)
+
+        self._report["move_readable_strings"] = move_readable_strings
+        self._report["expressions"] = expressions
+        self._report["moves_applied"] = moves_applied
+        
+        return self._report.copy()
+
+    def update_visited_generators(self, visited_generators):
+        assert isinstance(visited_generators, list), "Error: visited_generators must be a list."
+        for i in range(len(visited_generators)):
+            assert isinstance(visited_generators[i], tuple) and len(visited_generators[i]) == 2, "Error: moves_applied must contain tuples with two elements."
+            assert isinstance(visited_generators[i][0], sp.Matrix) and isinstance(visited_generators[i][1], sp.Matrix), "Error: each tuple in visited_generators must be a sympy matrix."
+        
+        self._report["visited_generators"] = visited_generators
+
+        return self._report.copy()
+    
+    def get_report(self):
+        return self._report.copy()
+    
+
+    def rational_to_latex_fraction(self, rational):
+        string_split = str(rational).rsplit("/")
+        if len(string_split)>1:
+            return "\\frac" + "{" + string_split[0] + "}{" + string_split[1] + "}"
+        else:
+            return str(rational)
+    
+    def get_metrics(self, latex=False):
+
+        alpha_returned, beta_returned = self._report["returned_generators"]
+
+        if not latex:
+            return {'X-coordinates': str(self._report["xcoords"]),
+                    "(A',B')": str(self._report["returned_expression"]),
+                        "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
+                        "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                        "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
+                        "tr(A'(B')^(-1))":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                        "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                        "length(B')":calculate_geodesic_length(beta_returned),
+                        "length(A')":calculate_geodesic_length(alpha_returned),
+                        "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                        "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                        "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+        
+        else:
+            coords = str(self._report["xcoords"])
+            return {'$\mathcal{X}$-coordinates': "$" + str(tuple([self.rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
+                    "$(A',B')$": "$" + str(self._report["returned_expression"]).replace("**","^").replace("*","") + "$", 
+                        "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
+                        "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
+                        "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                        "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                        "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                        "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                        "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                        "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                        "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                        "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+            
+
 
 class Objective():
     def __init__(self, objective_label):
@@ -316,25 +449,57 @@ class Objective():
 class TraceLengthReductionInterface():
     def __init__(self, x):
         assert isinstance(x, XCoords), "Error: x must be an instance of XCoords."
+        self.x = x
         coords, cube_roots = x.get_coords()
         self.generators = compute_translation_matrix_torus(*coords, *cube_roots)
     
     def trace_reduction(self, verbose=False):
-        alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(*self.generators, Objective('trace').get_objective(), verbose=verbose)
-        # print(expression)
+        objective = Objective('trace')
+        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
+        
+        reduction_results = ReductionResults(xcoords=self.x,
+                                            objective=objective,
+                                            returned_expression=expressions[-1],
+                                            returned_generators=(alpha_returned, beta_returned),
+                                            initial_generators=tuple(self.generators))
+        reduction_results.update_moves_applied(moves_applied, expressions)
+        reduction_results.update_visited_generators(visited_generators_trace)
+
+        print(reduction_results.get_report())
+        print(expressions)
+        print(reduction_results.get_metrics())
+        # print(moves_applied)
+        
         # print(visited_generators_trace)
 
     def length_reduction(self, verbose=False):
-        alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(*self.generators, Objective('length').get_objective(), verbose=verbose)
+        objective = Objective('length')
+        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
+        reduction_results = ReductionResults(xcoords=self.x,
+                                            objective=objective,
+                                            returned_expression=expressions[-1],
+                                            returned_generators=(alpha_returned, beta_returned),
+                                            initial_generators=tuple(self.generators))
+        reduction_results.update_moves_applied(moves_applied, expressions)
+        reduction_results.update_visited_generators(visited_generators_length)
+
+        # print(expressions)
+        # print(moves_applied)
 
 
-# random_integers = [1,1]*2 +[15, 10]*6 # special end longer
-# random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
-# random_rationals[2]=sp.Number(1)/random_rationals[3]
-# random_rationals[4]=sp.Number(1)/random_rationals[5]
-# random_rationals[6]=sp.Number(1)/random_rationals[7]
-# random_rationals[1] = sp.Number(1)/(sp.Number(2)*random_rationals[0])
+random_integers = [1,1]*2 +[15, 10]*6 # special end longer
+random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
+random_rationals[2]=sp.Number(1)/random_rationals[3]
+random_rationals[4]=sp.Number(1)/random_rationals[5]
+random_rationals[6]=sp.Number(1)/random_rationals[7]
+random_rationals[1] = sp.Number(1)/(sp.Number(2)*random_rationals[0])
+
+
+# random_integers = [1,216, 125,27, 27,125, 27,8, 1,216, 512,1, 125,1, 1,8]
+random_integers = [27,64, 64,125, 1,27, 1,8, 64,1, 8,729, 512,1, 343,216]
+random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
 
 # # # TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
 
 # TraceLengthReductionInterface(XCoords([sp.Number(1)]*8)).trace_reduction()
+TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
