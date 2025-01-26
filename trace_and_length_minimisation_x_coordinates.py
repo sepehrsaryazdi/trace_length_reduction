@@ -187,8 +187,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-
-def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=True):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
@@ -283,16 +282,27 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals =  np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        positive_k_vals = []
+        for k in k_vals:
+            if f(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, X_k, f(k)))
 
     bounds = get_bounds(alpha_prime,beta_prime,objective,Y_k,delta=objective_difference(alpha_prime,beta_prime))
     if bounds:
         [k0_algorithm,k1_algorithm] = bounds
         k_vals = np.linspace(k0_algorithm, k1_algorithm, k1_algorithm-k0_algorithm+1, dtype=np.int64)
-        if len(k_vals):
-            for k in k_vals:
+        
+        positive_k_vals = []
+        for k in k_vals:
+            if g(k)>0:
+                positive_k_vals.append(k)
+
+        if len(positive_k_vals):
+            for k in positive_k_vals:
                 candidate_moves.append((k, Y_k, g(k)))
 
     if verbose:        
@@ -305,7 +315,8 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         k = best_move[0]
         move_function = best_move[1]
 
-        expression = X_k(*move_function(expression[0],expression[1], k),0)
+        print('expression before', expression)
+        expression = move_function(expression[0],expression[1], k)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
@@ -317,7 +328,6 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
             print('no candidate post processing moves')
 
     return alpha_prime, beta_prime, visited_generators, expression
-
 
 
 
@@ -489,36 +499,37 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
 
     if not latex:
         return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
-                "(A',B')": str(expression).replace("a","A").replace("b","B"), 
-                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
-                    "length(A')":calculate_geodesic_length(alpha_returned),
+                "(A',B')": str(expression).replace("a","A").replace("b","B"),
                     "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
-                    "length(B')":calculate_geodesic_length(beta_returned),
-                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
                     "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
-                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "length(B')":calculate_geodesic_length(beta_returned),
+                    "length(A')":calculate_geodesic_length(alpha_returned),
+                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
     
     else:
         coords = (t,t_prime, e01, e10, e12, e21, e20, e02)
         return {'$\mathcal{X}$-coordinates': "$" + str(tuple([rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
                 "$(A',B')$": "$" + str(expression).replace("a","A").replace("b","B").replace("**","^").replace("*","") + "$", 
-                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
-                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
                     "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
-                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
                     "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
                     "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
-                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                     "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
         
 
 
-results = pd.DataFrame()
+results_tr = pd.DataFrame()
+results_l = pd.DataFrame()
 
 latex = False
 
@@ -541,6 +552,7 @@ for example_function in give_all_examples():
     print('Y =',(t*t_prime)**3*e01*e10*e12*e21*e20*e02)
 
     alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
+
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
@@ -552,8 +564,8 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\text{tr}$" if latex else "tr"]
     metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
-    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
+    metrics["Label"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    results_tr = pd.concat([results_tr, pd.DataFrame(metrics)], ignore_index=True)
 
 
     print("----TRACE REDUCTION RESULTS----")
@@ -581,8 +593,8 @@ for example_function in give_all_examples():
         metrics[key] = [metrics[key]]
     metrics["Objective"] = ["$\\ell$" if latex else "length"]
     metrics["Shorter End"] = ["Yes" if ("shorter" in str(example_function.__name__)) else "No"]    
-    metrics["End"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
-    results = pd.concat([results, pd.DataFrame(metrics)], ignore_index=True)
+    metrics["Label"] = [example_function.__name__.replace("generate","").replace("example","").replace("_"," ")[1:-1].replace("shorter ","").replace("longer ","").replace("end","").title()]
+    results_l = pd.concat([results_l, pd.DataFrame(metrics)], ignore_index=True)
 
 
     print("----LENGTH REDUCTION RESULTS----")
@@ -603,35 +615,99 @@ for example_function in give_all_examples():
 
     plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
-results = results.round(2)
+results_tr = results_tr.round(2)
+results_l = results_l.round(2)
 
-columns = np.array(results.columns)
 
-results = pd.DataFrame(results, columns=list(["End","Shorter End", "Objective"])+list(columns[:-3]))
 
-results.to_csv('./examples/results.csv', sep=',', index=False)
 
+columns_tr = np.array(results_tr.columns)
+results_tr = pd.DataFrame(results_tr, columns=list(["Label","Shorter End", "Objective"])+list(columns_tr[:-3]))
+results_tr.to_csv('./examples/results_tr.csv', sep=',', index=False)
+
+columns_l = np.array(results_l.columns)
+results_l = pd.DataFrame(results_l, columns=list(["Label","Shorter End", "Objective"])+list(columns_l[:-3]))
+results_l.to_csv('./examples/results_l.csv', sep=',', index=False)
+
+
+
+def colour_results(results):
+    if not latex:
+        starting_column_index = np.where(results.columns == "tr(B')")[0][0]
+    else:
+        starting_column_index = np.where(results.columns == "$\\text{tr}(B')$")[0][0]
+    ending_column_index = len(results.columns)-1
+
+    numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
+
+    numbers_matrix_trace = numbers_matrix[:, :5]
+    numbers_matrix_length = numbers_matrix[:, 5:]
+
+    colour_matrix = []
+
+    colour_values = ["\\cellcolor{green!50}", "\\cellcolor{orange!50}", "\\cellcolor{red!25}", "\\cellcolor{red!50}"]
+
+    for i in range(len(numbers_matrix_trace)):
+
+        colours_matrix_row_trace = [""]*5
+        colours_matrix_row_length = [""]*5
+
+        number_row_trace = np.array(numbers_matrix_trace[i])
+        number_row_length = np.array(numbers_matrix_length[i])
+
+        number_row_trace[number_row_trace == 3] = np.inf
+        number_row_length[number_row_length == 0] = np.inf
+
+        sorted_trace_index = np.argsort(number_row_trace)
+        sorted_length_index = np.argsort(number_row_length)
+
+        for j in range(4):
+            colours_matrix_row_trace[sorted_trace_index[j]] = colour_values[j]
+            colours_matrix_row_length[sorted_length_index[j]] = colour_values[j]
+        
+        # check that peripheral is in smallest 3 list
+        if colours_matrix_row_trace[-1] not in colour_values[:3]:
+            colours_matrix_row_trace[sorted_trace_index[3]] = ""
+        if colours_matrix_row_length[-1] not in colour_values[:3]:
+            colours_matrix_row_length[sorted_length_index[3]] = ""
+
+        colour_matrix.append(colours_matrix_row_trace + colours_matrix_row_length)
+    results_copy = pd.DataFrame(results)
+
+    for j in range(starting_column_index, ending_column_index+1):
+        for i in range(len(results)):
+            results_copy.iloc[i,j] = colour_matrix[i][j-starting_column_index] + str(results_copy.iloc[i,j])
+    
+    return results_copy
 
 
 def display_results_latex():
-    results = pd.read_csv('./examples/results.csv')
-    column_names = results.columns.to_numpy()
 
-    results = np.vstack([column_names, results.to_numpy()])
+    objectives = ['Trace', 'Length']
+    directories = ['tr', 'l']
 
-    results = results.T
+    for i in range(len(objectives)):
+        results = pd.read_csv(f'./examples/results_{directories[i]}.csv')
 
-    # results = np.hstack([results[:,:1],results[:, 7:]])
+        results = colour_results(results)
 
-    # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+        column_names = results.columns.to_numpy()
 
-    table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results[0,:]) + "|}\\hline\n"
-    for row in results:
-        table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+        results = np.vstack([column_names, results.to_numpy()])
 
-    table_string+="\\end{tabular}\n\\end{table}"
+        results = results.T
+
+        # results = np.hstack([results[:,:1],results[:, 7:]])
+
+        # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+
+        table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results[0,:]) + "|}\\hline\n"
+        for row in results:
+            table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+
+        table_string+="\\end{tabular}\n\\caption{" + objectives[i] + " Minimization Examples}\\end{table}"
     
-    print(table_string)
+        print(table_string)
 
 if latex:
     display_results_latex()
