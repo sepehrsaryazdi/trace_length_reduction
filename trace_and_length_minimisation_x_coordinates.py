@@ -316,7 +316,7 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         move_function = best_move[1]
 
         print('expression before', expression)
-        expression = X_k(*move_function(expression[0],expression[1], k),0)
+        expression = move_function(expression[0],expression[1], k)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
@@ -503,7 +503,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
                     "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
                     "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
-                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
                     "length(B')":calculate_geodesic_length(beta_returned),
                     "length(A')":calculate_geodesic_length(alpha_returned),
@@ -518,7 +518,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
                     "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
                     "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
                     "$\\ell(B')$":calculate_geodesic_length(beta_returned),
                     "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
