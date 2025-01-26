@@ -187,7 +187,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.Symbol('a',commutative=False),sp.Symbol('b',commutative=False)), verbose=True):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
@@ -503,7 +503,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
                     "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
                     "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
-                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
                     "length(B')":calculate_geodesic_length(beta_returned),
                     "length(A')":calculate_geodesic_length(alpha_returned),
@@ -518,7 +518,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
                     "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
                     "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
-                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha*(beta_returned.inv())).evalf()),
+                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
                     "$\\ell(B')$":calculate_geodesic_length(beta_returned),
                     "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
