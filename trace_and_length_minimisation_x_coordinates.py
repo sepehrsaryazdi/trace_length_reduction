@@ -316,7 +316,7 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         move_function = best_move[1]
 
         print('expression before', expression)
-        expression = move_function(expression[0],expression[1], k)
+        expression = X_k(*move_function(expression[0],expression[1], k),0)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
