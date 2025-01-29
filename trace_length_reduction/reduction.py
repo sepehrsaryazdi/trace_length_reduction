@@ -453,7 +453,7 @@ class TraceLengthReductionInterface():
         coords, cube_roots = x.get_coords()
         self.generators = compute_translation_matrix_torus(*coords, *cube_roots)
     
-    def trace_reduction(self, verbose=False):
+    def trace_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('trace')
         alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
         
@@ -465,14 +465,16 @@ class TraceLengthReductionInterface():
         reduction_results.update_moves_applied(moves_applied, expressions)
         reduction_results.update_visited_generators(visited_generators_trace)
 
-        print(reduction_results.get_report())
-        print(expressions)
-        print(reduction_results.get_metrics())
+        # print(reduction_results.get_report())
+        # print(expressions)
+        # print(reduction_results.get_metrics())
         # print(moves_applied)
         
         # print(visited_generators_trace)
 
-    def length_reduction(self, verbose=False):
+        return reduction_results
+
+    def length_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('length')
         alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
         reduction_results = ReductionResults(xcoords=self.x,
@@ -486,20 +488,5 @@ class TraceLengthReductionInterface():
         # print(expressions)
         # print(moves_applied)
 
+        return reduction_results
 
-random_integers = [1,1]*2 +[15, 10]*6 # special end longer
-random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
-random_rationals[2]=sp.Number(1)/random_rationals[3]
-random_rationals[4]=sp.Number(1)/random_rationals[5]
-random_rationals[6]=sp.Number(1)/random_rationals[7]
-random_rationals[1] = sp.Number(1)/(sp.Number(2)*random_rationals[0])
-
-
-# random_integers = [1,216, 125,27, 27,125, 27,8, 1,216, 512,1, 125,1, 1,8]
-random_integers = [27,64, 64,125, 1,27, 1,8, 64,1, 8,729, 512,1, 343,216]
-random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
-
-# # # TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
-
-# TraceLengthReductionInterface(XCoords([sp.Number(1)]*8)).trace_reduction()
-TraceLengthReductionInterface(XCoords(random_rationals)).trace_reduction()
