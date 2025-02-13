@@ -318,7 +318,6 @@ class ReductionResults():
     def __init__(self, xcoords, objective, returned_expression, returned_generators, initial_generators, initial_expression=(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))):
         assert isinstance(xcoords, XCoords), "Error: xcoords must be an instance of XCoords."
         assert isinstance(objective, Objective), "Error: objective must be an instance of Objective."
-        # assert reduction_type == "trace" or reduction_type == "length", 'Error: reduction_type must be either length or trace.'
         assert isinstance(returned_expression, tuple) and len(returned_expression) == 2, "Error: Returned expression must be a tuple with two elements."
         assert isinstance(returned_expression[0], sp.Expr) and isinstance(returned_expression[1], sp.Expr), "Error: Returned expression must contain sympy expressions."
         assert isinstance(returned_generators, tuple) and len(returned_generators) == 2, "Error: Returned generators must be a tuple with two elements."
@@ -338,14 +337,14 @@ class ReductionResults():
                         "returned_generators": returned_generators,
                     }
         
-        self.reduction_type_to_latex_hash = {"trace":"\\text{tr}", "length": "\\ell"}
-        self.reduction_type_to_str_hash = {"trace":"tr", "length": "l"}
+        self._reduction_type_to_latex_hash = {"trace":"\\text{tr}", "length": "\\ell"}
+        self._reduction_type_to_str_hash = {"trace":"tr", "length": "l"}
 
     def get_objective(self):
         return self._report["objective"]
 
     def _move_to_string_rep(self, move_string,objective_value, is_post_processing, expression, latex=True):
-        subscript = self.reduction_type_to_latex_hash[self.get_objective()] if latex else self.reduction_type_to_str_hash[self.get_objective()]
+        subscript = self._reduction_type_to_latex_hash[self.get_objective()] if latex else self._reduction_type_to_str_hash[self.get_objective()]
         move_string_objective_value_str = ""
 
         if not is_post_processing:
