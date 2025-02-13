@@ -2,13 +2,14 @@ from trace_length_reduction.reduction import ReductionResults
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
-
+import tkinter as tk
+from tkinter import ttk
 
 
 def so21_function(x):
     return 2*np.log(1/2*(x**2)-1+1/2*np.sqrt(x**2*(x**2-4)))
 
-class LengthTracePlot():
+class LengthTracePlot:
     """
     Class for initialising and visualising the length trace plot.
     """
@@ -63,3 +64,37 @@ class LengthTracePlot():
         self.fig.show()
         plt.pause(timeout_sec)
 
+
+class MenuApp(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        # self.pack(anchor='nw')
+
+
+class Menu:
+    """
+    Class for visualising menu for seeing examples or minimising a set of X-coordinates.
+    """
+
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Trace Length Reduction Algorithm Menu")
+        self.root.geometry("520x120")
+        self.menubar = tk.Menu(self.root)        
+        self.app = MenuApp(self.root)
+        self.button_frame = ttk.Frame(self.root)    
+        self.button_frame.pack(side="top", pady=(20,0))
+
+        self.examples_button= ttk.Button(self.button_frame, text="Examples")
+        self.examples_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        self.examples_button.bind("<ButtonPress>", lambda x:x)
+
+
+        self.minimise_button= ttk.Button(self.button_frame, text="Minimise X-coordinates")
+        self.minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        self.minimise_button.bind("<ButtonPress>", lambda x:x)
+
+
+
+    def show(self):
+        self.app.mainloop()

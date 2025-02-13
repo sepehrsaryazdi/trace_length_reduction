@@ -15,6 +15,6 @@ setup(
    package_dir = {
             'trace_length_reduction': 'trace_length_reduction'},
    packages=['trace_length_reduction'],
-   install_requires=['wheel', 'numpy', 'sympy', 'matplotlib', 'pandas'], #external packages as dependencies
+   install_requires=['wheel', 'numpy', 'sympy', 'matplotlib', 'pandas', 'tk'], #external packages as dependencies
    scripts=['main.py']
 )

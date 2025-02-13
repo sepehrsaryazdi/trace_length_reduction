@@ -1,6 +1,6 @@
 import sympy as sp
 from trace_length_reduction.reduction import XCoords, TraceLengthReductionInterface
-from trace_length_reduction.visualisation import LengthTracePlot
+from trace_length_reduction.visualisation import LengthTracePlot, Menu
 
 random_integers = [1,1]*2 +[15, 10]*6 # special end longer
 random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
@@ -21,4 +21,7 @@ length_reduction_results = trace_length_reduction_interface.length_reduction()
 # print(trace_reduction_results)
 # print(length_reduction_results)
 
-length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results)
+# length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results)
+
+menu = Menu()
+menu.show()
