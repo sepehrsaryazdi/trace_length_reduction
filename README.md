@@ -2,7 +2,30 @@
 
 The extended algorithms for length and trace reduction on convex projective surfaces are presented in this repository. Their implementations are done symbolically through the [SymPy](https://www.sympy.org/en/index.html) library. The only potential technical issue lies in the calculation of the eigenvalues for 3 x 3 matrices, which relies on the cubic root formula in the SymPy implementation. This means that the eigenvalues will be rounded to a certain precision, although this can be set arbitrarily high in the implementation.
 
+## Installation
 
+To install, run the following code. This will install the trace_length_reduction pip package, including its dependencies. If this does not work, the dependencies listed in `setup.py` can be installed separately.
+
+```
+python3 -m pip install -e .
+```
+
+## Running
+
+To run, run the following code:
+
+```
+python3 main.py
+```
+
+## Usage
+
+After running, a visual interface appears as shown below.
+
+![Trace Length Reduction Algorithm Menu](readme_pictures/menu.png)
+
+
+<!-- 
 ## Installation
 
 To install, run the following:
@@ -20,8 +43,10 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'
 ```
 
 If a LaTeX distribution is not available, one can comment out the `plot_eigenvalues_and_traces` function call to run the algorithm nonetheless.
+ -->
 
-## Running
+
+<!-- ## Running
 
 To run, do the following:
 
@@ -77,4 +102,4 @@ tr(A'): 38.6984278549383
 ---------------------------------
 ```
 
-![Length and Trace Plot](LengthTracePlot.png)
+![Length and Trace Plot](LengthTracePlot.png) -->

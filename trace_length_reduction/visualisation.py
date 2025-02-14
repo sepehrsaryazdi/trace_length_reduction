@@ -126,10 +126,6 @@ class Menu:
         self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
         self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
         
-        # print(trace_reduction_results.get_report())
-        # print(length_reduction_results.get_report())
-
-
         
 
     def convert_input_to_rational(self, input):
