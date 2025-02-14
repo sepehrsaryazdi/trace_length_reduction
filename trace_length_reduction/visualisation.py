@@ -6,6 +6,7 @@ import matplotlib as mpl
 import tkinter as tk
 from tkinter import ttk
 import sympy as sp
+from tkinter.scrolledtext import ScrolledText
 
 
 def so21_function(x):
@@ -90,17 +91,46 @@ class Menu:
         self.minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         self.minimise_button.bind("<ButtonPress>", lambda event : self.show_minimise_window(event))
 
+    def display_results(self, results, title="Results"):
+        assert isinstance(results, ReductionResults), "Error: results must be of type ReductionResults."
+
+        results_window = tk.Toplevel()
+        results_window.wm_title(title)
+
+        text = ScrolledText(results_window)
+        text.pack(ipady=150)
+        text.bind("<KeyPress>", lambda x:x)
+        # text.insert("end", "Hello"+"\n"*40+"World.")
+        text.insert("end", str(results.get_report()))
+
+
+    def cube_inputs(self, x, return_func, event):
+        x = self.process_inputs(x,event)
+        return_func([xi**3 for xi in x])
+
     def process_inputs(self, x, event):
-        
         x = [self.convert_input_to_rational(xi) for xi in x]
+        return x
+
+
+
+    def process_and_display_inputs(self, x, event):
+        
+        x = self.process_inputs(x, event)
         
         trace_length_reduction_interface = TraceLengthReductionInterface(XCoords(x))
 
         trace_reduction_results = trace_length_reduction_interface.trace_reduction()
         length_reduction_results = trace_length_reduction_interface.length_reduction()
+        
+        self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
+        self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
+        
+        # print(trace_reduction_results.get_report())
+        # print(length_reduction_results.get_report())
 
-        print(trace_reduction_results)
-        print(length_reduction_results)
+
+        
 
     def convert_input_to_rational(self, input):
         if '/' in input:
@@ -115,19 +145,29 @@ class Menu:
         minimise_window.wm_title("Minimise X-coordinates")
         minimise_window_text = tk.Label(minimise_window,
                                             text="Please enter X-coordinates below, then press Minimise to generate reports.")
-        minimise_window_text.pack()
+        minimise_window_text.pack(padx=5, pady=5)
 
         x_coord_input_frame = tk.Frame(minimise_window)
         x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
 
         [entry.insert(0,'1') for entry in x_coord_entries]
         [entry.pack(side="left", ipady=5) for entry in x_coord_entries]
-        x_coord_input_frame.pack()
+        x_coord_input_frame.pack(padx=5, pady=5)
 
 
         minimise_button = ttk.Button(x_coord_input_frame, text="Minimise")
         minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
-        minimise_button.bind("<ButtonPress>", lambda event:self.process_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event))
+        minimise_button.bind("<ButtonPress>", lambda event:self.process_and_display_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event))
+
+        def modify_inputs(new_inputs):
+            assert isinstance(new_inputs, list) and len(new_inputs) == len(x_coord_entries), "Error: new_inputs must be a list of same length as x coordinates."
+            for i in range(len(new_inputs)):
+                x_coord_entries[i].delete(0,tk.END)
+                x_coord_entries[i].insert(0, str(new_inputs[i]))
+
+        cube_button = ttk.Button(x_coord_input_frame, text="Cube Inputs (Optional)")
+        cube_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        cube_button.bind("<ButtonPress>", lambda event: self.cube_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], modify_inputs, event))
 
 
 
