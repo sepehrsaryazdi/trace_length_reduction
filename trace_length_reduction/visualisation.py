@@ -1,9 +1,11 @@
 from trace_length_reduction.reduction import ReductionResults
+from trace_length_reduction.reduction import XCoords, TraceLengthReductionInterface
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 import tkinter as tk
 from tkinter import ttk
+import sympy as sp
 
 
 def so21_function(x):
@@ -65,11 +67,6 @@ class LengthTracePlot:
         plt.pause(timeout_sec)
 
 
-class MenuApp(tk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
-        # self.pack(anchor='nw')
-
 
 class Menu:
     """
@@ -81,7 +78,7 @@ class Menu:
         self.root.title("Trace Length Reduction Algorithm Menu")
         self.root.geometry("520x120")
         self.menubar = tk.Menu(self.root)        
-        self.app = MenuApp(self.root)
+        self.app = tk.Frame(self.root)
         self.button_frame = ttk.Frame(self.root)    
         self.button_frame.pack(side="top", pady=(20,0))
 
@@ -89,10 +86,48 @@ class Menu:
         self.examples_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         self.examples_button.bind("<ButtonPress>", lambda x:x)
 
-
         self.minimise_button= ttk.Button(self.button_frame, text="Minimise X-coordinates")
         self.minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
-        self.minimise_button.bind("<ButtonPress>", lambda x:x)
+        self.minimise_button.bind("<ButtonPress>", lambda event : self.show_minimise_window(event))
+
+    def process_inputs(self, x, event):
+        
+        x = [self.convert_input_to_rational(xi) for xi in x]
+        
+        trace_length_reduction_interface = TraceLengthReductionInterface(XCoords(x))
+
+        trace_reduction_results = trace_length_reduction_interface.trace_reduction()
+        length_reduction_results = trace_length_reduction_interface.length_reduction()
+
+        print(trace_reduction_results)
+        print(length_reduction_results)
+
+    def convert_input_to_rational(self, input):
+        if '/' in input:
+            input = input.rsplit('/')
+            return sp.Number(input[0])/sp.Number(input[1])
+        return sp.Number(input)
+
+    def show_minimise_window(self, event):
+        
+        minimise_window = tk.Toplevel()
+        minimise_window.resizable(width=False, height=False)
+        minimise_window.wm_title("Minimise X-coordinates")
+        minimise_window_text = tk.Label(minimise_window,
+                                            text="Please enter X-coordinates below, then press Minimise to generate reports.")
+        minimise_window_text.pack()
+
+        x_coord_input_frame = tk.Frame(minimise_window)
+        x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
+
+        [entry.insert(0,'1') for entry in x_coord_entries]
+        [entry.pack(side="left", ipady=5) for entry in x_coord_entries]
+        x_coord_input_frame.pack()
+
+
+        minimise_button = ttk.Button(x_coord_input_frame, text="Minimise")
+        minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        minimise_button.bind("<ButtonPress>", lambda event:self.process_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event))
 
 
 
