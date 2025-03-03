@@ -561,7 +561,7 @@ def canonical_generators(alpha,beta, length_function=calculate_geodesic_length, 
     if trace_function(alpha) >= trace_function(beta):
         return (alpha,beta)
     else:
-        return (alpha,beta.inv())
+        return (alpha.inv(),beta)
     
 
 
