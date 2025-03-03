@@ -542,9 +542,9 @@ results_l = pd.DataFrame()
 
 latex = True
 
-def canonical_ordering(alpha,beta, length_function=calculate_geodesic_length, trace_function=sp.trace):
+def canonical_generators(alpha,beta, length_function=calculate_geodesic_length, trace_function=sp.trace):
     """
-    Places free basis (alpha,beta) into a canonical ordering such that
+    Places free basis (alpha,beta) into canonical generators such that
     length(alpha') >= length(beta')
     tr(alpha') >= tr(beta')
     where alpha',beta' belong to the set {alpha,alpha^(-1), beta, beta^(-1)} and remain a free basis
@@ -587,7 +587,7 @@ for example_function in give_all_examples():
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
-    alpha, beta = canonical_ordering(alpha,beta)
+    alpha, beta = canonical_generators(alpha,beta)
     # print(calculate_geodesic_length(alpha_prime)>= calculate_geodesic_length(beta_prime))
     # print(sp.trace(alpha_prime)>= sp.trace(beta_prime))
 
