@@ -194,9 +194,9 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
 
     objective_function, objective_label = objective
 
-    if objective_function(alpha) < objective_function(beta):
-        print('swapped')
-        alpha,beta = beta,alpha
+    # if objective_function(alpha) < objective_function(beta):
+    #     print('swapped')
+    #     alpha,beta = beta,alpha
 
         
     def objective_difference(A,B):
@@ -317,7 +317,7 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         move_function = best_move[1]
 
         print('expression before', expression)
-        expression = move_function(expression[0],expression[1], k)
+        expression = X_k(*move_function(expression[0],expression[1], k),0)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
@@ -510,6 +510,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "tr(A'(B')^(-1))": np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "tr((A'(B')^(-1))^(-1))": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "tr([A',B']^(-1))": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
                     "length(B')":calculate_geodesic_length(beta_returned),
                     "length(A')":calculate_geodesic_length(alpha_returned),
                     "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
@@ -529,6 +530,7 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
                     "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
                     "$\\text{tr}((A'(B')^{-1})^{-1})$": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\text{tr}([A',B']^(-1))$": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
                     "$\\ell(B')$":calculate_geodesic_length(beta_returned),
                     "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
                     "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
@@ -584,15 +586,19 @@ for example_function in give_all_examples():
 
     alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
 
+
+    alpha, beta = canonical_generators(alpha,beta)
+    # print(calculate_geodesic_length(alpha)>= calculate_geodesic_length(beta))
+    # print(sp.trace(alpha)>= sp.trace(beta))
+
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
-    alpha, beta = canonical_generators(alpha,beta)
-    # print(calculate_geodesic_length(alpha_prime)>= calculate_geodesic_length(beta_prime))
-    # print(sp.trace(alpha_prime)>= sp.trace(beta_prime))
 
 
     alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, (lambda x : sp.trace(x),'trace'), [])
+
+    # print('exp returned:', expression)
 
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
@@ -622,6 +628,8 @@ for example_function in give_all_examples():
 
     alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, (calculate_geodesic_length,'length'), [])
     
+    # print('exp returned:', expression)
+
     
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
@@ -675,8 +683,8 @@ def colour_results(results):
 
     numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
 
-    numbers_matrix_trace = numbers_matrix[:, :9]
-    numbers_matrix_length = numbers_matrix[:, 9:]
+    numbers_matrix_trace = numbers_matrix[:, :10]
+    numbers_matrix_length = numbers_matrix[:, 10:]
 
     colour_matrix = []
 
@@ -684,7 +692,7 @@ def colour_results(results):
 
     for i in range(len(numbers_matrix_trace)):
 
-        colours_matrix_row_trace = [""]*9
+        colours_matrix_row_trace = [""]*10
         colours_matrix_row_length = [""]*5
 
         number_row_trace = np.array(numbers_matrix_trace[i])
@@ -701,7 +709,7 @@ def colour_results(results):
             colours_matrix_row_length[sorted_length_index[j]] = colour_values[j]
         
         # check that peripheral is in smallest 3 list
-        if colours_matrix_row_trace[-1] not in colour_values[:3]:
+        if (colours_matrix_row_trace[-1] not in colour_values[:3]) and (colours_matrix_row_trace[-2] not in colour_values[:3]):
             colours_matrix_row_trace[sorted_trace_index[3]] = ""
         if colours_matrix_row_length[-1] not in colour_values[:3]:
             colours_matrix_row_length[sorted_length_index[3]] = ""
