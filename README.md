@@ -24,6 +24,15 @@ After running, a visual interface appears as shown below.
 
 ![Trace Length Reduction Algorithm Menu](readme_pictures/menu.png)
 
+Click on `Minimise X-coordinates` to enter specific X-coordinates, or click `Examples` to see a list of example X-coordinates. For ease of use, you can click `Minimise X-coordinates` multiple times to open new windows and enter different coordinatoes.
+
+![Trace Length Reduction Examples Menu](readme_pictures/examples.png)
+
+To optionally cube the X-coordinate entries, click `Cube Inputs (Optional)`. To optionally randomise the X-coordinatew entries, click `Randomise Inputs (Optional)`. When ready, click `Minimise` to run the reduction procedures for trace and length, which outputs a window containing all the procedures' steps, generators encountered and their corresponding SL(3,R) matrices. An example output is shown below.
+
+![Trace Length Reduction Example Reduction Results](readme_pictures/reduction_results.png)
+
+To copy the output text to clipboard, click `Copy Output`.
 
 <!-- 
 ## Installation
