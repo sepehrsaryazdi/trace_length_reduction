@@ -6,7 +6,7 @@ import matplotlib as mpl
 import warnings
 import pandas as pd
 
-from examples.generation_functions import give_all_examples
+from examples.example_generation_functions import give_all_examples
 
 
 def represent_matrix_as_latex(M):
@@ -194,8 +194,9 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
 
     objective_function, objective_label = objective
 
-    if objective_function(alpha) < objective_function(beta):
-        alpha,beta = beta,alpha
+    # if objective_function(alpha) < objective_function(beta):
+    #     print('swapped')
+    #     alpha,beta = beta,alpha
 
         
     def objective_difference(A,B):
@@ -316,7 +317,7 @@ def main_algorithm(alpha, beta, objective, visited_generators=[],expression=(sp.
         move_function = best_move[1]
 
         print('expression before', expression)
-        expression = move_function(expression[0],expression[1], k)
+        expression = X_k(*move_function(expression[0],expression[1], k),0)
 
         if verbose:
             print("post processing algorithm move applied:", f"{str(move_function).rsplit(" ")[1]} {k}", expression)
@@ -501,10 +502,15 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
         return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
                 "(A',B')": str(expression).replace("a","A").replace("b","B"),
                     "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
+                    "tr((B')^(-1))": np.float64(sp.trace(beta_returned.inv()).evalf()),
                     "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                    "tr((A')^(-1))": np.float64(sp.trace(alpha_returned.inv()).evalf()),
                     "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
-                    "tr(A'(B')^(-1))":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                    "tr((A'B')^(-1))": np.float64(sp.trace((alpha_returned*beta_returned).inv()).evalf()),
+                    "tr(A'(B')^(-1))": np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                    "tr((A'(B')^(-1))^(-1))": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
                     "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "tr([A',B']^{-1})": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
                     "length(B')":calculate_geodesic_length(beta_returned),
                     "length(A')":calculate_geodesic_length(alpha_returned),
                     "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
@@ -516,10 +522,15 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
         return {'$\mathcal{X}$-coordinates': "$" + str(tuple([rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
                 "$(A',B')$": "$" + str(expression).replace("a","A").replace("b","B").replace("**","^").replace("*","") + "$", 
                     "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
+                    "$\\text{tr}((B')^{-1})$": np.float64(sp.trace(beta_returned.inv()).evalf()),
                     "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
+                    "$\\text{tr}((A')^{-1})$": np.float64(sp.trace(alpha_returned.inv()).evalf()),
                     "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                    "$\\text{tr}((A'B')^{-1})$": np.float64(sp.trace((alpha_returned*beta_returned).inv()).evalf()),
                     "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                    "$\\text{tr}((A'(B')^{-1})^{-1})$": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
                     "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\text{tr}([A',B']^{-1})$": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
                     "$\\ell(B')$":calculate_geodesic_length(beta_returned),
                     "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
                     "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
@@ -531,7 +542,29 @@ def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e1
 results_tr = pd.DataFrame()
 results_l = pd.DataFrame()
 
-latex = False
+latex = True
+
+def canonical_generators(alpha,beta, length_function=calculate_geodesic_length, trace_function=sp.trace):
+    """
+    Places free basis (alpha,beta) into canonical generators such that
+    length(alpha') >= length(beta')
+    tr(alpha') >= tr(beta')
+    where alpha',beta' belong to the set {alpha,alpha^(-1), beta, beta^(-1)} and remain a free basis
+    """
+    if length_function(alpha) < length_function(beta):
+        alpha,beta = beta,alpha
+
+    if trace_function(beta) > trace_function(beta.inv()):
+        beta = beta.inv()
+    
+    if trace_function(alpha) > trace_function(alpha.inv()):
+        alpha = alpha.inv()
+
+    if trace_function(alpha) >= trace_function(beta):
+        return (alpha,beta)
+    else:
+        return (alpha.inv(),beta)
+    
 
 
 
@@ -553,11 +586,19 @@ for example_function in give_all_examples():
 
     alpha,beta = compute_translation_matrix_torus(t,t_prime, e01, e10, e12, e21, e20, e02, *random_rationals)
 
+
+    alpha, beta = canonical_generators(alpha,beta)
+    # print(calculate_geodesic_length(alpha)>= calculate_geodesic_length(beta))
+    # print(sp.trace(alpha)>= sp.trace(beta))
+
     print('A =', represent_matrix_as_latex(alpha))
     print('B =', represent_matrix_as_latex(beta))
 
 
+
     alpha_returned, beta_returned, visited_generators_trace, expression = main_algorithm(alpha, beta, (lambda x : sp.trace(x),'trace'), [])
+
+    # print('exp returned:', expression)
 
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
     for key in metrics.keys():
@@ -586,6 +627,8 @@ for example_function in give_all_examples():
     print('---------------------------------')
 
     alpha_returned, beta_returned, visited_generators_length, expression = main_algorithm(alpha, beta, (calculate_geodesic_length,'length'), [])
+    
+    # print('exp returned:', expression)
 
     
     metrics = get_metrics(alpha_returned, beta_returned, expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex)
@@ -613,7 +656,7 @@ for example_function in give_all_examples():
             )
     print('---------------------------------')
 
-    plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
+    #plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
 results_tr = results_tr.round(2)
 results_l = results_l.round(2)
@@ -640,8 +683,8 @@ def colour_results(results):
 
     numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
 
-    numbers_matrix_trace = numbers_matrix[:, :5]
-    numbers_matrix_length = numbers_matrix[:, 5:]
+    numbers_matrix_trace = numbers_matrix[:, :10]
+    numbers_matrix_length = numbers_matrix[:, 10:]
 
     colour_matrix = []
 
@@ -649,7 +692,7 @@ def colour_results(results):
 
     for i in range(len(numbers_matrix_trace)):
 
-        colours_matrix_row_trace = [""]*5
+        colours_matrix_row_trace = [""]*10
         colours_matrix_row_length = [""]*5
 
         number_row_trace = np.array(numbers_matrix_trace[i])
@@ -666,7 +709,7 @@ def colour_results(results):
             colours_matrix_row_length[sorted_length_index[j]] = colour_values[j]
         
         # check that peripheral is in smallest 3 list
-        if colours_matrix_row_trace[-1] not in colour_values[:3]:
+        if (colours_matrix_row_trace[-1] not in colour_values[:3]) and (colours_matrix_row_trace[-2] not in colour_values[:3]):
             colours_matrix_row_trace[sorted_trace_index[3]] = ""
         if colours_matrix_row_length[-1] not in colour_values[:3]:
             colours_matrix_row_length[sorted_length_index[3]] = ""

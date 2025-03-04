@@ -2,7 +2,39 @@
 
 The extended algorithms for length and trace reduction on convex projective surfaces are presented in this repository. Their implementations are done symbolically through the [SymPy](https://www.sympy.org/en/index.html) library. The only potential technical issue lies in the calculation of the eigenvalues for 3 x 3 matrices, which relies on the cubic root formula in the SymPy implementation. This means that the eigenvalues will be rounded to a certain precision, although this can be set arbitrarily high in the implementation.
 
+## Installation
 
+To install, run the following code. This will install the trace_length_reduction pip package, including its dependencies. If this does not work, the dependencies listed in `setup.py` can be installed separately.
+
+```
+python3 -m pip install -e .
+```
+
+## Running
+
+To run, run the following code:
+
+```
+python3 main.py
+```
+
+## Usage
+
+After running, a visual interface appears as shown below.
+
+![Trace Length Reduction Algorithm Menu](readme_pictures/menu.png)
+
+Click on `Minimise X-coordinates` to enter specific X-coordinates, or click `Examples` to see a list of example X-coordinates. For ease of use, you can click `Minimise X-coordinates` multiple times to open new windows and enter different coordinatoes.
+
+![Trace Length Reduction Examples Menu](readme_pictures/examples.png)
+
+To optionally cube the X-coordinate entries, click `Cube Inputs (Optional)`. To optionally randomise the X-coordinate entries, click `Randomise Inputs (Optional)`. When ready, click `Minimise` to run the reduction procedures for trace and length, which outputs a window containing all the procedures' steps, generators encountered and their corresponding SL(3,R) matrices. An example output is shown below.
+
+![Trace Length Reduction Example Reduction Results](readme_pictures/reduction_results.png)
+
+To copy the output text to clipboard, click `Copy Output`.
+
+<!-- 
 ## Installation
 
 To install, run the following:
@@ -20,8 +52,10 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'
 ```
 
 If a LaTeX distribution is not available, one can comment out the `plot_eigenvalues_and_traces` function call to run the algorithm nonetheless.
+ -->
 
-## Running
+
+<!-- ## Running
 
 To run, do the following:
 
@@ -77,4 +111,4 @@ tr(A'): 38.6984278549383
 ---------------------------------
 ```
 
-![Length and Trace Plot](LengthTracePlot.png)
+![Length and Trace Plot](LengthTracePlot.png) -->

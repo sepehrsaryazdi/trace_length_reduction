@@ -1,0 +1,17 @@
+End,Shorter End,Objective,$\mathcal{X}$-coordinates,"$(A',B')$",$\text{tr}(A')$,$\ell(A')$,$\text{tr}(B')$,$\ell(B')$,$\text{tr}(A'B')$,$\ell(A'B')$,$\text{tr}(A'(B')^{-1})$,$\ell(A'(B')^{-1})$,"$\text{tr}([A',B'])$","$\ell([A',B'])$"
+Arithmetic Torus Cusp,Yes,$\text{tr}$,"$\left(1, 1, 1, 1, 1, 1, 1, 1\right)$","$(A, B)$",8.0,3.85,8.0,3.85,8.0,3.85,35.0,7.05,3.0,0.0
+Arithmetic Torus Cusp,Yes,$\ell$,"$\left(1, 1, 1, 1, 1, 1, 1, 1\right)$","$(A, B)$",8.0,3.85,8.0,3.85,8.0,3.85,35.0,7.05,3.0,0.0
+Hyperbolic Surface Hyperbolic ,Yes,$\text{tr}$,"$\left(1, 1, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}\right)$","$(A, B)$",8.2,3.91,8.2,3.91,8.2,3.91,37.04,7.17,4.32,2.19
+Hyperbolic Surface Hyperbolic ,Yes,$\ell$,"$\left(1, 1, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}, \frac{6}{5}\right)$","$(A, B)$",8.2,3.91,8.2,3.91,8.2,3.91,37.04,7.17,4.32,2.19
+Hyperbolic Surface Hyperbolic ,No,$\text{tr}$,"$\left(1, 1, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}\right)$","$(A, B)$",9.03,4.13,9.03,4.13,9.03,4.13,46.07,7.62,12.48,4.87
+Hyperbolic Surface Hyperbolic ,No,$\ell$,"$\left(1, 1, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}, \frac{3}{2}\right)$","$(A, B)$",9.03,4.13,9.03,4.13,9.03,4.13,46.07,7.62,12.48,4.87
+Cusp ,No,$\text{tr}$,"$\left(1, 1, 8, \frac{1}{8}, 8, \frac{1}{8}, 8, \frac{1}{8}\right)$","$(A, B)$",20.25,5.91,20.25,5.91,20.25,5.91,367.5,9.57,3.0,0.0
+Cusp ,No,$\ell$,"$\left(1, 1, 8, \frac{1}{8}, 8, \frac{1}{8}, 8, \frac{1}{8}\right)$","$(A, B)$",20.25,5.91,20.25,5.91,20.25,5.91,367.5,9.57,3.0,0.0
+Hyperbolic ,Yes,$\text{tr}$,"$\left(1, \frac{1}{8}, 8, \frac{1}{8}, 64, \frac{1}{8}, 8, \frac{1}{8}\right)$","$(AB, B^(-1))$",19.27,5.85,14.06,5.98,73.56,7.89,1456.53,9.14,9.12,4.16
+Hyperbolic ,Yes,$\ell$,"$\left(1, \frac{1}{8}, 8, \frac{1}{8}, 64, \frac{1}{8}, 8, \frac{1}{8}\right)$","$(B, AB)$",38.53,5.98,19.27,5.85,53.02,9.14,38.53,7.89,9.12,4.16
+Hyperbolic ,No,$\text{tr}$,"$\left(1, \frac{1}{8}, 1, 1, 8, 1, 1, 1\right)$","$(AB, B^(-1))$",11.0,4.72,6.25,3.38,21.5,5.39,12.5,6.7,9.12,4.16
+Hyperbolic ,No,$\ell$,"$\left(1, \frac{1}{8}, 1, 1, 8, 1, 1, 1\right)$","$(B, AB)$",12.5,4.72,6.25,3.38,32.38,6.7,12.5,5.39,9.12,4.16
+Special ,Yes,$\text{tr}$,"$\left(1, \frac{1}{8}, \frac{1}{8}, 8, \frac{1}{8}, 8, \frac{1}{8}, 8\right)$","$(A, B)$",24.75,6.85,24.75,6.85,41.62,6.85,109.81,11.45,16.02,6.24
+Special ,Yes,$\ell$,"$\left(1, \frac{1}{8}, \frac{1}{8}, 8, \frac{1}{8}, 8, \frac{1}{8}, 8\right)$","$(A, B)$",24.75,6.85,24.75,6.85,41.62,6.85,109.81,11.45,16.02,6.24
+Special ,No,$\text{tr}$,"$\left(1, \frac{1}{8}, \frac{8}{27}, \frac{27}{8}, \frac{8}{27}, \frac{27}{8}, \frac{8}{27}, \frac{27}{8}\right)$","$(A, B)$",15.03,5.61,15.03,5.61,20.98,5.61,65.33,9.7,16.02,6.24
+Special ,No,$\ell$,"$\left(1, \frac{1}{8}, \frac{8}{27}, \frac{27}{8}, \frac{8}{27}, \frac{27}{8}, \frac{8}{27}, \frac{27}{8}\right)$","$(A, B)$",15.03,5.61,15.03,5.61,20.98,5.61,65.33,9.7,16.02,6.24
