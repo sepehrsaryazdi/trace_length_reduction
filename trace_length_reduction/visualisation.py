@@ -123,11 +123,20 @@ class Menu:
         results_window = tk.Toplevel()
         results_window.wm_title(title)
 
+        text_results = str(results.get_report())
+
+        def copy_to_clipboard(text):
+            results_window.clipboard_clear()
+            results_window.clipboard_append(text)
+        copy_to_clipboard_button = ttk.Button(results_window, text="Copy Output")
+        copy_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        copy_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_results))
+
         text = ScrolledText(results_window)
-        text.pack(ipady=150)
+        text.pack(side="left", ipady=150)
         text.bind("<KeyPress>", lambda x:x)
         # text.insert("end", "Hello"+"\n"*40+"World.")
-        text.insert("end", str(results.get_report()))
+        text.insert("end", text_results)
 
 
     def cube_inputs(self, x, return_func, event):
