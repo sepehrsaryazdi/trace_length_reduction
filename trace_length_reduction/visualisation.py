@@ -85,6 +85,11 @@ class Menu:
         self.app = tk.Frame(self.root)
         self.button_frame = ttk.Frame(self.root)    
         self.button_frame.pack(side="top", pady=(20,0))
+        try:
+            photo = tk.PhotoImage(file = 'trace_length_reduction/icon.png')
+            self.root.wm_iconphoto(False, photo)
+        except:
+            pass
 
         self.examples_button= ttk.Button(self.button_frame, text="Examples")
         self.examples_button.pack(side="left", padx=25, ipadx=20, ipady=20)
