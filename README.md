@@ -28,7 +28,7 @@ Click on `Minimise X-coordinates` to enter specific X-coordinates, or click `Exa
 
 ![Trace Length Reduction Examples Menu](readme_pictures/examples.png)
 
-To optionally cube the X-coordinate entries, click `Cube Inputs (Optional)`. To optionally randomise the X-coordinatew entries, click `Randomise Inputs (Optional)`. When ready, click `Minimise` to run the reduction procedures for trace and length, which outputs a window containing all the procedures' steps, generators encountered and their corresponding SL(3,R) matrices. An example output is shown below.
+To optionally cube the X-coordinate entries, click `Cube Inputs (Optional)`. To optionally randomise the X-coordinate entries, click `Randomise Inputs (Optional)`. When ready, click `Minimise` to run the reduction procedures for trace and length, which outputs a window containing all the procedures' steps, generators encountered and their corresponding SL(3,R) matrices. An example output is shown below.
 
 ![Trace Length Reduction Example Reduction Results](readme_pictures/reduction_results.png)
 
