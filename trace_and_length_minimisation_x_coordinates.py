@@ -6,7 +6,7 @@ import matplotlib as mpl
 import warnings
 import pandas as pd
 
-from examples.generation_functions import give_all_examples
+from examples.example_generation_functions import give_all_examples
 
 
 def represent_matrix_as_latex(M):

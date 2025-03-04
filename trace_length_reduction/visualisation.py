@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import ttk
 import sympy as sp
 from tkinter.scrolledtext import ScrolledText
+from examples.example_generation_functions import give_all_examples
+
 
 
 def so21_function(x):
@@ -85,11 +87,35 @@ class Menu:
 
         self.examples_button= ttk.Button(self.button_frame, text="Examples")
         self.examples_button.pack(side="left", padx=25, ipadx=20, ipady=20)
-        self.examples_button.bind("<ButtonPress>", lambda x:x)
+        self.examples_button.bind("<ButtonPress>", lambda event : self.show_examples(event))
 
         self.minimise_button= ttk.Button(self.button_frame, text="Minimise X-coordinates")
         self.minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         self.minimise_button.bind("<ButtonPress>", lambda event : self.show_minimise_window(event))
+
+    def show_examples(self ,event):
+        
+        examples_window = tk.Toplevel()
+        examples_window.resizable(width=False, height=False)
+        examples_window.wm_title("Examples")
+        examples_window_text = tk.Label(examples_window,
+                                            text="Please select an example below.")
+        examples_window_text.pack(padx=5, pady=5)
+
+
+        for example_function in give_all_examples():
+            random_rationals = example_function()
+
+            t = random_rationals[0]**3
+            t_prime = random_rationals[1]**3
+            e01 = random_rationals[2]**3
+            e10 = random_rationals[3]**3
+            e12 = random_rationals[4]**3
+            e21 = random_rationals[5]**3
+            e20 = random_rationals[6]**3
+            e02 = random_rationals[7]**3
+            self.add_minimise_buttons(event,examples_window,default_inputs=XCoords([t,t_prime, e01, e10, e12, e21, e20, e02]))
+
 
     def display_results(self, results, title="Results"):
         assert isinstance(results, ReductionResults), "Error: results must be of type ReductionResults."
@@ -107,6 +133,11 @@ class Menu:
     def cube_inputs(self, x, return_func, event):
         x = self.process_inputs(x,event)
         return_func([xi**3 for xi in x])
+    
+    def randomise_inputs(self, return_func, event):
+        random_integers = [np.random.randint(1,10) for i in range(16)]
+        random_rationals = [sp.Number(random_integers[2*i])/sp.Number(random_integers[2*i+1]) for i in range(8)]
+        return_func(random_rationals)
 
     def process_inputs(self, x, event):
         x = [self.convert_input_to_rational(xi) for xi in x]
@@ -133,20 +164,13 @@ class Menu:
             input = input.rsplit('/')
             return sp.Number(input[0])/sp.Number(input[1])
         return sp.Number(input)
-
-    def show_minimise_window(self, event):
-        
-        minimise_window = tk.Toplevel()
-        minimise_window.resizable(width=False, height=False)
-        minimise_window.wm_title("Minimise X-coordinates")
-        minimise_window_text = tk.Label(minimise_window,
-                                            text="Please enter X-coordinates below, then press Minimise to generate reports.")
-        minimise_window_text.pack(padx=5, pady=5)
-
-        x_coord_input_frame = tk.Frame(minimise_window)
+    
+    def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
+        x_coord_input_frame = tk.Frame(frame)
         x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
 
-        [entry.insert(0,'1') for entry in x_coord_entries]
+        default_coords = default_inputs.get_coords()[0]
+        [entry.insert(0,str(default_coords[i])) for i, entry in enumerate(x_coord_entries)]
         [entry.pack(side="left", ipady=5) for entry in x_coord_entries]
         x_coord_input_frame.pack(padx=5, pady=5)
 
@@ -164,6 +188,23 @@ class Menu:
         cube_button = ttk.Button(x_coord_input_frame, text="Cube Inputs (Optional)")
         cube_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         cube_button.bind("<ButtonPress>", lambda event: self.cube_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], modify_inputs, event))
+
+        randomise_button = ttk.Button(x_coord_input_frame, text="Randomise Inputs (Optional)")
+        randomise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        randomise_button.bind("<ButtonPress>", lambda event: self.randomise_inputs(modify_inputs, event))
+
+
+    def show_minimise_window(self, event, default_inputs=XCoords([sp.Number(1)]*8)):
+        assert isinstance(default_inputs, XCoords), "Error: Default inputs must be of class XCoords."
+        
+        minimise_window = tk.Toplevel()
+        minimise_window.resizable(width=False, height=False)
+        minimise_window.wm_title("Minimise X-coordinates")
+        minimise_window_text = tk.Label(minimise_window,
+                                            text="Please enter X-coordinates below, then press Minimise to generate reports.")
+        minimise_window_text.pack(padx=5, pady=5)
+
+        self.add_minimise_buttons(event, minimise_window, default_inputs)
 
 
 
