@@ -10,6 +10,48 @@ from tkinter.scrolledtext import ScrolledText
 from examples.example_generation_functions import give_all_examples
 
 
+def get_metrics(alpha_returned,beta_returned,expression, t,t_prime, e01, e10, e12, e21, e20, e02, latex=False):
+
+    if not latex:
+        return {'X-coordinates': str((t,t_prime, e01, e10, e12, e21, e20, e02)),
+                "(A',B')": str(expression).replace("a","A").replace("b","B"),
+                    "tr(B')": np.float64(sp.trace(beta_returned).evalf()),
+                    "tr((B')^(-1))": np.float64(sp.trace(beta_returned.inv()).evalf()),
+                    "tr(A')": np.float64(sp.trace(alpha_returned).evalf()),
+                    "tr((A')^(-1))": np.float64(sp.trace(alpha_returned.inv()).evalf()),
+                    "tr(A'B')": np.float64(sp.trace(alpha_returned*beta_returned).evalf()), 
+                    "tr((A'B')^(-1))": np.float64(sp.trace((alpha_returned*beta_returned).inv()).evalf()),
+                    "tr(A'(B')^(-1))": np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                    "tr((A'(B')^(-1))^(-1))": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
+                    "tr([A',B'])": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "tr([A',B']^{-1})": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
+                    "length(B')":calculate_geodesic_length(beta_returned),
+                    "length(A')":calculate_geodesic_length(alpha_returned),
+                    "length(A'B')": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "length(A'(B')^(-1))":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                    "length([A',B'])":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+    
+    else:
+        coords = (t,t_prime, e01, e10, e12, e21, e20, e02)
+        return {'$\mathcal{X}$-coordinates': "$" + str(tuple([rational_to_latex_fraction(x) for x in coords])).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
+                "$(A',B')$": "$" + str(expression).replace("a","A").replace("b","B").replace("**","^").replace("*","") + "$", 
+                    "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
+                    "$\\text{tr}((B')^{-1})$": np.float64(sp.trace(beta_returned.inv()).evalf()),
+                    "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
+                    "$\\text{tr}((A')^{-1})$": np.float64(sp.trace(alpha_returned.inv()).evalf()),
+                    "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                    "$\\text{tr}((A'B')^{-1})$": np.float64(sp.trace((alpha_returned*beta_returned).inv()).evalf()),
+                    "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                    "$\\text{tr}((A'(B')^{-1})^{-1})$": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
+                    "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                    "$\\text{tr}([A',B']^{-1})$": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
+                    "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                    "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                    "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                    "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                    "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+
+
 
 def so21_function(x):
     return 2*np.log(1/2*(x**2)-1+1/2*np.sqrt(x**2*(x**2-4)))
@@ -128,15 +170,21 @@ class Menu:
         def copy_to_clipboard(text):
             results_window.clipboard_clear()
             results_window.clipboard_append(text)
-        copy_to_clipboard_button = ttk.Button(results_window, text="Copy Output")
+        results_frame = tk.Frame(results_window)
+        copy_to_clipboard_button = ttk.Button(results_frame, text="Copy Output")
         copy_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         copy_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_results))
 
-        text = ScrolledText(results_window)
+        text = ScrolledText(results_frame)
         text.pack(side="left", ipady=150)
         text.bind("<KeyPress>", lambda x:x)
         # text.insert("end", "Hello"+"\n"*40+"World.")
         text.insert("end", text_results)
+
+        results_frame.pack()
+
+
+        # table_frame = tk.Frame(results_window)
 
 
     def cube_inputs(self, x, return_func, event):
