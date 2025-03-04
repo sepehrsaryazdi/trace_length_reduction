@@ -54,6 +54,27 @@ def calculate_geodesic_length(gamma):
 def calculate_lengths(alpha,beta):
     return calculate_geodesic_length(alpha), calculate_geodesic_length(beta)
 
+def calculate_canonical_generators(alpha,beta, length_function=calculate_geodesic_length, trace_function=sp.trace):
+    """
+    Places free basis (alpha,beta) into canonical generators such that
+    length(alpha') >= length(beta')
+    tr(alpha') >= tr(beta')
+    where alpha',beta' belong to the set {alpha,alpha^(-1), beta, beta^(-1)} and remain a free basis
+    """
+    if length_function(alpha) < length_function(beta):
+        alpha,beta = beta,alpha
+
+    if trace_function(beta) > trace_function(beta.inv()):
+        beta = beta.inv()
+    
+    if trace_function(alpha) > trace_function(alpha.inv()):
+        alpha = alpha.inv()
+
+    if trace_function(alpha) >= trace_function(beta):
+        return (alpha,beta)
+    else:
+        return (alpha.inv(),beta)
+
 def trmax(x):
     """
     Returns trmax function
@@ -315,7 +336,7 @@ class XCoords():
 
 class ReductionResults():
     # TO DO: add metrics, expressions and post processing results in a self-contained report, with options to render as LaTeX
-    def __init__(self, xcoords, objective, returned_expression, returned_generators, initial_generators, initial_expression=(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))):
+    def __init__(self, xcoords, objective, returned_expression, returned_generators, initial_generators, pre_canonical_generators, initial_expression=(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))):
         assert isinstance(xcoords, XCoords), "Error: xcoords must be an instance of XCoords."
         assert isinstance(objective, Objective), "Error: objective must be an instance of Objective."
         assert isinstance(returned_expression, tuple) and len(returned_expression) == 2, "Error: Returned expression must be a tuple with two elements."
@@ -331,6 +352,7 @@ class ReductionResults():
                         "expressions": [],
                         "move_readable_strings": [],
                         "visited_generators": [],
+                        "pre_canonical_generators": pre_canonical_generators,
                         "initial_expression": initial_expression,
                         "initial_generators": initial_generators,
                         "returned_expression": returned_expression,
@@ -451,16 +473,21 @@ class TraceLengthReductionInterface():
         self.x = x
         coords, cube_roots = x.get_coords()
         self.generators = compute_translation_matrix_torus(*coords, *cube_roots)
+        self.canonical_generators = calculate_canonical_generators(*self.generators)
+
+    
+    
     
     def trace_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('trace')
-        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), verbose=verbose)
         
         reduction_results = ReductionResults(xcoords=self.x,
                                             objective=objective,
                                             returned_expression=expressions[-1],
                                             returned_generators=(alpha_returned, beta_returned),
-                                            initial_generators=tuple(self.generators))
+                                            initial_generators=tuple(self.canonical_generators),
+                                            pre_canonical_generators=tuple(self.generators))
         reduction_results.update_moves_applied(moves_applied, expressions)
         reduction_results.update_visited_generators(visited_generators_trace)
 
@@ -475,12 +502,13 @@ class TraceLengthReductionInterface():
 
     def length_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('length')
-        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.generators, objective.get_objective(), verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), verbose=verbose)
         reduction_results = ReductionResults(xcoords=self.x,
                                             objective=objective,
                                             returned_expression=expressions[-1],
                                             returned_generators=(alpha_returned, beta_returned),
-                                            initial_generators=tuple(self.generators))
+                                            initial_generators=tuple(self.canonical_generators),
+                                            pre_canonical_generators=tuple(self.generators))
         reduction_results.update_moves_applied(moves_applied, expressions)
         reduction_results.update_visited_generators(visited_generators_length)
 
