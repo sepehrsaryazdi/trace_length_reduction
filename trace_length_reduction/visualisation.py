@@ -31,7 +31,7 @@ def colour_results(results):
     ending_column_index = len(results.columns)-1
 
     numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
-
+    print(numbers_matrix, 'numbers matrix')
     numbers_matrix_trace = numbers_matrix[:, :10]
     numbers_matrix_length = numbers_matrix[:, 10:]
 
@@ -46,6 +46,8 @@ def colour_results(results):
 
         number_row_trace = np.array(numbers_matrix_trace[i])
         number_row_length = np.array(numbers_matrix_length[i])
+
+
 
         number_row_trace[number_row_trace == 3] = np.inf
         number_row_length[number_row_length == 0] = np.inf
@@ -134,7 +136,6 @@ def create_latex_table_string(results):
         trace_and_length_results_latex[key] = [trace_and_length_results_latex[key]]
     results_table = pd.concat([results_table, pd.DataFrame(trace_and_length_results_latex)], ignore_index=True)
     results_table = results_table.round(2)
-    results_table = colour_results(results_table)
 
     return results_table_to_latex(results_table, report["objective"])
 
@@ -253,18 +254,35 @@ class Menu:
         results_window = tk.Toplevel()
         results_window.wm_title(title)
 
+        canvas = tk.Canvas(results_window)
+        scrollbar = ttk.Scrollbar(results_window, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", ipadx=200, expand=True)
+        scrollbar.pack(side="right", fill="y", ipady=300)
+
+
         text_result_string = str(results.get_report())
 
         def copy_to_clipboard(text):
             results_window.clipboard_clear()
             results_window.clipboard_append(text)
 
-        results_frame = tk.Frame(results_window)
+        results_frame = tk.Frame(scrollable_frame)
         copy_results_to_clipboard_button = ttk.Button(results_frame, text="Copy Output")
         copy_results_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         copy_results_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_result_string))
 
-        text_results = ScrolledText(results_frame)
+        text_results = tk.Text(results_frame)
         text_results.pack(side="left", ipady=150)
         text_results.bind("<KeyPress>", lambda x:x)
         # text.insert("end", "Hello"+"\n"*40+"World.")
@@ -276,11 +294,11 @@ class Menu:
         table_string = create_latex_table_string(results)
 
 
-        table_frame = tk.Frame(results_window)
+        table_frame = tk.Frame(scrollable_frame)
         copy_table_to_clipboard_button = ttk.Button(table_frame, text="Copy Output")
         copy_table_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         copy_table_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(table_string))
-        text_table = ScrolledText(table_frame)
+        text_table = tk.Text(table_frame)
         text_table.pack(side="left", ipady=150)
         text_table.bind("<KeyPress>", lambda x:x)
         # text.insert("end", "Hello"+"\n"*40+"World.")
