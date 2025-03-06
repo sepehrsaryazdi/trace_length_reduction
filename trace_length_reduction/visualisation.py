@@ -1,4 +1,4 @@
-from trace_length_reduction.reduction import ReductionResults
+from trace_length_reduction.reduction import ReductionResults, calculate_geodesic_length, commutator
 from trace_length_reduction.reduction import XCoords, TraceLengthReductionInterface
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,12 +8,136 @@ from tkinter import ttk
 import sympy as sp
 from tkinter.scrolledtext import ScrolledText
 from examples.example_generation_functions import give_all_examples
-
+import pandas as pd
 
 
 
 def so21_function(x):
     return 2*np.log(1/2*(x**2)-1+1/2*np.sqrt(x**2*(x**2-4)))
+
+
+def convert_input_to_rational(input):
+    if '/' in input:
+        input = input.rsplit('/')
+        return sp.Number(input[0])/sp.Number(input[1])
+    return sp.Number(input)
+
+
+
+def colour_results(results):
+
+    
+    starting_column_index = np.where(results.columns == "$\\text{tr}(B')$")[0][0]
+    ending_column_index = len(results.columns)-1
+
+    numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
+
+    numbers_matrix_trace = numbers_matrix[:, :10]
+    numbers_matrix_length = numbers_matrix[:, 10:]
+
+    colour_matrix = []
+
+    colour_values = ["\\cellcolor{green!50}", "\\cellcolor{orange!50}", "\\cellcolor{red!25}", "\\cellcolor{red!50}"]
+
+    for i in range(len(numbers_matrix_trace)):
+
+        colours_matrix_row_trace = [""]*10
+        colours_matrix_row_length = [""]*5
+
+        number_row_trace = np.array(numbers_matrix_trace[i])
+        number_row_length = np.array(numbers_matrix_length[i])
+
+        number_row_trace[number_row_trace == 3] = np.inf
+        number_row_length[number_row_length == 0] = np.inf
+
+        sorted_trace_index = np.argsort(number_row_trace)
+        sorted_length_index = np.argsort(number_row_length)
+
+        for j in range(4):
+            colours_matrix_row_trace[sorted_trace_index[j]] = colour_values[j]
+            colours_matrix_row_length[sorted_length_index[j]] = colour_values[j]
+        
+        # check that peripheral is in smallest 3 list
+        if (colours_matrix_row_trace[-1] not in colour_values[:3]) and (colours_matrix_row_trace[-2] not in colour_values[:3]):
+            colours_matrix_row_trace[sorted_trace_index[3]] = ""
+        if colours_matrix_row_length[-1] not in colour_values[:3]:
+            colours_matrix_row_length[sorted_length_index[3]] = ""
+
+        colour_matrix.append(colours_matrix_row_trace + colours_matrix_row_length)
+    results_copy = pd.DataFrame(results)
+
+    for j in range(starting_column_index, ending_column_index+1):
+        for i in range(len(results)):
+            results_copy.iloc[i,j] = colour_matrix[i][j-starting_column_index] + str(results_copy.iloc[i,j])
+    
+    return results_copy
+
+
+def results_table_to_latex(results_table, objective):
+
+    results_table = colour_results(results_table)
+
+    column_names = results_table.columns.to_numpy()
+
+    results_table = np.vstack([column_names, results_table.to_numpy()])
+
+    results_table = results_table.T
+
+    # results = np.hstack([results[:,:1],results[:, 7:]])
+
+    # results[0,:] = np.array([results[0,i].replace("Hyperbolic Surface", "$\mathbb{H}^2$") for i in range(len(results[0,:]))])
+
+    table_string = "\\begin{table}[!ht]\n\\centering\n\\begin{tabular}{" + "|l"*len(results_table[0,:]) + "|}\\hline\n"
+    for row in results_table:
+        table_string += " & ".join([str(x) for x in list(row)]) + " \\\\ \\hline \n"
+
+    table_string+="\\end{tabular}\n\\caption{" + str(objective).capitalize() + " Minimization Examples}\\end{table}"
+
+    return table_string
+
+
+def create_latex_table_string(results):
+    assert isinstance(results, ReductionResults), "Error: results must be of type ReductionResults."
+    
+    
+    report = results.get_report()
+
+    returned_expression = report["returned_expression"]
+    alpha_returned, beta_returned = report["returned_generators"]
+    coords = report["xcoords"]
+
+    def convert_sympy_expr_to_latex(expression):
+        return str(expression).replace("**","^").replace("*","").replace("(","{").replace(")","}")
+
+    trace_and_length_results_latex = {
+            '$\mathcal{X}$-coordinates': "$" + str(coords).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
+            "$(A',B')$": "$(" + convert_sympy_expr_to_latex(returned_expression[0]) + ", " + convert_sympy_expr_to_latex(returned_expression[1])+ ")$", 
+                "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
+                "$\\text{tr}((B')^{-1})$": np.float64(sp.trace(beta_returned.inv()).evalf()),
+                "$\\text{tr}(A')$": np.float64(sp.trace(alpha_returned).evalf()),
+                "$\\text{tr}((A')^{-1})$": np.float64(sp.trace(alpha_returned.inv()).evalf()),
+                "$\\text{tr}(A'B')$": np.float64(sp.trace(alpha_returned*beta_returned).evalf()),
+                "$\\text{tr}((A'B')^{-1})$": np.float64(sp.trace((alpha_returned*beta_returned).inv()).evalf()),
+                "$\\text{tr}(A'(B')^{-1})$":np.float64(sp.trace(alpha_returned*(beta_returned.inv())).evalf()),
+                "$\\text{tr}((A'(B')^{-1})^{-1})$": np.float64(sp.trace((alpha_returned*(beta_returned.inv())).inv()).evalf()),
+                "$\\text{tr}([A',B'])$": np.float64(sp.trace(commutator(alpha_returned,beta_returned)).evalf()),
+                "$\\text{tr}([A',B']^{-1})$": np.float64(sp.trace(commutator(alpha_returned,beta_returned).inv()).evalf()),
+                "$\\ell(B')$":calculate_geodesic_length(beta_returned),
+                "$\\ell(A')$":calculate_geodesic_length(alpha_returned),
+                "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
+                "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
+                "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+    
+    results_table = pd.DataFrame()
+
+    for key in trace_and_length_results_latex.keys():
+        trace_and_length_results_latex[key] = [trace_and_length_results_latex[key]]
+    results_table = pd.concat([results_table, pd.DataFrame(trace_and_length_results_latex)], ignore_index=True)
+    results_table = results_table.round(2)
+    results_table = colour_results(results_table)
+
+    return results_table_to_latex(results_table, report["objective"])
+
 
 class LengthTracePlot:
     """
@@ -129,27 +253,40 @@ class Menu:
         results_window = tk.Toplevel()
         results_window.wm_title(title)
 
-        text_results = str(results.get_report())
+        text_result_string = str(results.get_report())
 
         def copy_to_clipboard(text):
             results_window.clipboard_clear()
             results_window.clipboard_append(text)
-        results_frame = tk.Frame(results_window)
-        copy_to_clipboard_button = ttk.Button(results_frame, text="Copy Output")
-        copy_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
-        copy_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_results))
 
-        text = ScrolledText(results_frame)
-        text.pack(side="left", ipady=150)
-        text.bind("<KeyPress>", lambda x:x)
+        results_frame = tk.Frame(results_window)
+        copy_results_to_clipboard_button = ttk.Button(results_frame, text="Copy Output")
+        copy_results_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        copy_results_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_result_string))
+
+        text_results = ScrolledText(results_frame)
+        text_results.pack(side="left", ipady=150)
+        text_results.bind("<KeyPress>", lambda x:x)
         # text.insert("end", "Hello"+"\n"*40+"World.")
-        text.insert("end", text_results)
+        text_results.insert("end", text_result_string)
 
         results_frame.pack()
 
 
-        # table_frame = tk.Frame(results_window)
+        table_string = create_latex_table_string(results)
 
+
+        table_frame = tk.Frame(results_window)
+        copy_table_to_clipboard_button = ttk.Button(table_frame, text="Copy Output")
+        copy_table_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        copy_table_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(table_string))
+        text_table = ScrolledText(table_frame)
+        text_table.pack(side="left", ipady=150)
+        text_table.bind("<KeyPress>", lambda x:x)
+        # text.insert("end", "Hello"+"\n"*40+"World.")
+        text_table.insert("end", table_string)
+
+        table_frame.pack()
 
     def cube_inputs(self, x, return_func, event):
         x = self.process_inputs(x,event)
@@ -161,7 +298,7 @@ class Menu:
         return_func(random_rationals)
 
     def process_inputs(self, x, event):
-        x = [self.convert_input_to_rational(xi) for xi in x]
+        x = [convert_input_to_rational(xi) for xi in x]
         return x
 
 
@@ -180,12 +317,6 @@ class Menu:
         
         
 
-    def convert_input_to_rational(self, input):
-        if '/' in input:
-            input = input.rsplit('/')
-            return sp.Number(input[0])/sp.Number(input[1])
-        return sp.Number(input)
-    
     def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
         x_coord_input_frame = tk.Frame(frame)
         x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
