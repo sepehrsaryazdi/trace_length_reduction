@@ -31,7 +31,6 @@ def colour_results(results):
     ending_column_index = len(results.columns)-1
 
     numbers_matrix = np.array(results)[:, starting_column_index:(ending_column_index+1)]
-    print(numbers_matrix, 'numbers matrix')
     numbers_matrix_trace = numbers_matrix[:, :10]
     numbers_matrix_length = numbers_matrix[:, 10:]
 
