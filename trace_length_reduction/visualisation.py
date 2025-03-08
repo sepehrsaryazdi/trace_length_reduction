@@ -15,7 +15,7 @@ def represent_matrix_as_latex(M):
     return str(M).replace("Matrix","").replace("(", r"\begin{pmatrix} ").replace(")",r" \end{pmatrix}").replace("],",r" \\").replace(",",r" &").replace("[","").replace("]","")
     
 def represent_matrix_as_text(M):
-    return str(M).replace("Matrix","").replace("(", "").replace(")","")
+    return str(M).replace("Matrix","").replace("(", "").replace(")","").replace("],", "],\n")
     
 def so21_function(x):
     return 2*np.log(1/2*(x**2)-1+1/2*np.sqrt(x**2*(x**2-4)))
@@ -228,7 +228,7 @@ class LengthTracePlot:
         if self.latex:
             ax.scatter(traces, lengths, c='red',label=r'Random Elements From $\left\langle'+represent_matrix_as_latex(alpha) + ","+represent_matrix_as_latex(beta) +r'\right\rangle$')
         else:
-            ax.scatter(traces, lengths, c='red',label='Random Elements From '+represent_matrix_as_text(alpha) + ","+represent_matrix_as_text(beta))
+            ax.scatter(traces, lengths, c='red',label='Random Elements From \n<'+represent_matrix_as_text(alpha) + ",\n"+represent_matrix_as_text(beta) + ">")
 
         visited_trace_length_1st = np.array([[sp.trace(element[0]).evalf(), calculate_geodesic_length(element[0])] for element in visited_generators])
 
@@ -263,7 +263,7 @@ class LengthTracePlot:
         if self.latex:    
             ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label=r"$A'(B')^{-1}$", marker="2")
         else:
-            ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label="A'(B')" + "^" + "(-1)", marker="2")
+            ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label="A'(B')" + "**" + "(-1)", marker="2")
         
 
         return ax
