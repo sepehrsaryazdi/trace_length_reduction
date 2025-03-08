@@ -164,11 +164,11 @@ class LengthTracePlot:
             self.load_latex()
             plot_title =f"{objective.capitalize()}" + r" Reduction Length Trace Plot ($\mathcal{X}$-coordinates: $" + str(coords) + r")$"
         else:
-            plot_title = f"{objective.capitalize()}" + "Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
+            plot_title = f"{objective.capitalize()}" + " Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
         window_title = f"{objective.capitalize()}" + " Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
         self.create_figure(plot_title, window_title)
         self.add_boundaries(self.ax)
-        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"], reduction_results.get_report()["visited_generators"])
+        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"],reduction_results.get_report()["returned_generators"], reduction_results.get_report()["visited_generators"])
         self.show_figure()
     
     def load_latex(self):
@@ -191,10 +191,17 @@ class LengthTracePlot:
         
          
 
-    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, visited_generators, num_distinct_random_group_elements=100):
+    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, returned_generators, visited_generators, num_distinct_random_group_elements=200):
         
         alpha,beta = initial_generators
-        current_known_fundamental_group_elements = [commutator(alpha,beta)] + [alpha,beta] + [visited_generators[i][0] for i in range(len(visited_generators))] + [visited_generators[i][1] for i in range(len(visited_generators))]
+        alpha_returned,beta_returned = returned_generators
+
+        peripheral = commutator(alpha_returned,beta_returned)
+        AB = alpha_returned*beta_returned
+        AB_inv = alpha_returned*(beta_returned.inv())
+
+
+        current_known_fundamental_group_elements = [peripheral, AB, AB_inv] + [alpha,beta] + [visited_generators[i][0] for i in range(len(visited_generators))] + [visited_generators[i][1] for i in range(len(visited_generators))]
         unique_fundamental_group_elements = []
         for element in current_known_fundamental_group_elements:
             if element not in unique_fundamental_group_elements:
@@ -223,21 +230,41 @@ class LengthTracePlot:
         else:
             ax.scatter(traces, lengths, c='red',label='Random Elements From '+represent_matrix_as_text(alpha) + ","+represent_matrix_as_text(beta))
 
-        visited_trace_length_1st = np.array([[sp.trace(element[0]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators])
+        visited_trace_length_1st = np.array([[sp.trace(element[0]).evalf(), calculate_geodesic_length(element[0])] for element in visited_generators])
 
         ax.plot(visited_trace_length_1st[:,0], visited_trace_length_1st[:,1], c='cyan', label=f'Generalised {objective.capitalize()} Reduction 1st Generator Path')
         ax.scatter(visited_trace_length_1st[:,0], visited_trace_length_1st[:,1], c='cyan')
-        ax.scatter([visited_trace_length_1st[-1][0]], [visited_trace_length_1st[-1][1]], c='blue', label=f'{objective.capitalize()} Reduction 1st Generator Terminated Representative')
-
+        if self.latex:
+            ax.scatter([visited_trace_length_1st[-1][0]], [visited_trace_length_1st[-1][1]], c='darkturquoise', label=r"$A'$")
+        else:
+            ax.scatter([visited_trace_length_1st[-1][0]], [visited_trace_length_1st[-1][1]], c='darkturquoise', label="A'")
+            
         visited_trace_length_2nd = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators])
 
-        ax.plot(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], c='green', label=f'Generalised {objective.capitalize()} Reduction 2nd Generator Path')
-        ax.scatter(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], c='green')
-        ax.scatter([visited_trace_length_2nd[-1][0]], [visited_trace_length_2nd[-1][1]], c='purple', label=f'{objective.capitalize()} Reduction 2nd Generator Terminated Representative')
+        ax.plot(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], linestyle='dashed', c='green', label=f'Generalised {objective.capitalize()} Reduction 2nd Generator Path')
+        ax.scatter(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], c='green', marker="v")
+        if self.latex:
+            ax.scatter([visited_trace_length_2nd[-1][0]], [visited_trace_length_2nd[-1][1]], marker="v",c='purple', label=r"$B'$")
+        else:
+            ax.scatter([visited_trace_length_2nd[-1][0]], [visited_trace_length_2nd[-1][1]], marker="v",c='purple', label="B'")
 
+        alpha_returned,beta_returned = returned_generators
+        if self.latex:
+            ax.scatter(sp.trace(peripheral), calculate_geodesic_length(peripheral), c='orange',label=r"$[A',B']$", marker="s",s=15)
+        else:
+            ax.scatter(sp.trace(peripheral), calculate_geodesic_length(peripheral), c='orange',label="[A',B']", marker="s",s=15)
 
-        trace_and_length_results_latex = generate_trace_and_length_results_latex(coords, returned_expression, alpha,beta)
-        print(trace_and_length_results_latex)
+        if self.latex:    
+            ax.scatter(sp.trace(AB), calculate_geodesic_length(AB), c='black',label=r"$A'B'$", marker="p",s=15)
+        else:
+            ax.scatter(sp.trace(AB), calculate_geodesic_length(AB), c='black',label="A'B'", marker="p",s=15)
+        
+        
+        if self.latex:    
+            ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label=r"$A'(B')^{-1}$", marker="2")
+        else:
+            ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label="A'(B')" + "^" + "(-1)", marker="2")
+        
 
         return ax
 
@@ -291,7 +318,7 @@ class LengthTracePlot:
 
 
     def show_figure(self, timeout_sec=0.01):
-        self.ax.legend(fontsize=19,loc='upper right')
+        self.ax.legend(fontsize=int(self.fontsize/2),loc='lower right')
         self.fig.show()
         plt.pause(timeout_sec)
 
@@ -435,6 +462,7 @@ class Menu:
         
         self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
         self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
+        
         self.show_length_trace_plot(trace_reduction_results, latex_rendering=latex_rendering)
         self.show_length_trace_plot(length_reduction_results, latex_rendering=latex_rendering)
         

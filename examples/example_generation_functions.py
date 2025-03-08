@@ -103,7 +103,11 @@ def generate_inbetween_hyperbolic_end_example():
     random_rationals[1] = sp.Number(2+3)/(sp.Number(2+10)*random_rationals[0])
     return random_rationals
 
+def generate_counterexample():
+    xcoords_cube_roots=[sp.Number(5)/sp.Number(2), sp.Number(7)/sp.Number(9), sp.Number(1), sp.Number(3)/sp.Number(2), sp.Number(7)/sp.Number(8), sp.Number(6)/sp.Number(7), sp.Number(1)/sp.Number(4), sp.Number(5)/sp.Number(3)]
+    return xcoords_cube_roots
+
 def give_all_examples():
-    return [generate_arithmetic_torus_shorter_cusp_example, generate_hyperbolic_surface_shorter_hyperbolic_end_example, generate_hyperbolic_surface_longer_hyperbolic_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example, generate_inbetween_hyperbolic_end_example]
+    return [generate_arithmetic_torus_shorter_cusp_example, generate_hyperbolic_surface_shorter_hyperbolic_end_example, generate_hyperbolic_surface_longer_hyperbolic_end_example, generate_cusp_end_example, generate_shorter_hyperbolic_end_example, generate_longer_hyperbolic_end_example, generate_shorter_special_end_example, generate_longer_special_end_example, generate_inbetween_hyperbolic_end_example, generate_counterexample]
     # return [generate_inbetween_hyperbolic_end_example]
     # return [generate_arithmetic_torus_example, generate_hyperbolic_surface_shorter_end_example, generate_hyperbolic_surface_longer_end_example]
