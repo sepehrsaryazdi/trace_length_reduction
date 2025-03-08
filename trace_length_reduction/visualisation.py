@@ -143,19 +143,17 @@ class LengthTracePlot:
     """
     Class for initialising and visualising the length trace plot.
     """
-    def __init__(self, trace_reduction_results, length_reduction_results, latex=True):
+    def __init__(self, trace_reduction_results, length_reduction_results, latex=True, title="Length Trace Plot"):
         assert isinstance(trace_reduction_results, ReductionResults), f"Error: {trace_reduction_results} must be an instance of ReductionResults."
         assert isinstance(length_reduction_results, ReductionResults), f"Error: {length_reduction_results} must be an instance of ReductionResults."
 
-        
+        self.latex = latex
 
-        print(trace_reduction_results.get_report())
-
-        if latex:
+        if self.latex:
             self.load_latex()
 
-        self.create_figure()
-
+        self.create_figure(title)
+        self.add_boundaries(self.ax)
         self.show_figure()
     
     def load_latex(self):
@@ -164,9 +162,11 @@ class LengthTracePlot:
         mpl.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'
     
 
-    def create_figure(self):
+    def create_figure(self, title):
         self.fig, self.ax = plt.subplots(figsize = (9, 6))
-        self.ax.plot([1,2,3],[4,5,6])
+        self.fig.canvas.manager.set_window_title(title)
+        # self.ax.plot([1,2,3],[4,5,6])
+        self.ax.set_title(title)
 
     def add_boundaries(self, ax, x_max=1000, y_max=1000):
         assert isinstance(ax, plt.Axes), "Error: ax must be a plt.Axes object."
@@ -174,17 +174,26 @@ class LengthTracePlot:
         y = np.linspace(0,x_max, 10000)
         x = 3/(2**(2/3))*(np.exp(y)+1)**(2/3) * np.exp(-y/3)
         ax.plot(x,y, c='blue')
-        ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[170],y[170]),xytext=(x[170],y[170]+0.8), fontsize=50, c='blue',rotation=5)
+        if self.latex:
+            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[170],y[170]),xytext=(x[170],y[170]+0.8), fontsize=50, c='blue',rotation=5)
+        else:
+            ax.annotate('l_max(tr(gamma))', xy=(x[170],y[170]),xytext=(x[170],y[170]+0.8), fontsize=50, c='blue',rotation=5)
 
         y = np.linspace(0,y_max, 10000)
         x = (np.exp(y)+2)* np.exp(-y/3)
         ax.plot(x,y, c='blue')
-        ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[95],y[95]),xytext=(x[95],y[95]-1.8), fontsize=50, c='blue',rotation=3)
+        if self.latex:
+            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[95],y[95]),xytext=(x[95],y[95]-1.8), fontsize=50, c='blue',rotation=3)
+        else:
+            ax.annotate('l_min(tr(gamma))', xy=(x[95],y[95]),xytext=(x[95],y[95]-1.8), fontsize=50, c='blue',rotation=3)
 
         x = np.linspace(0, x_max, 1000)
         y = so21_function(np.sqrt(x+1))
         ax.plot(x,y, c='orange')
-        ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[550],y[550]),xytext=(x[550],y[550]+0.8), fontsize=22, c='orange',rotation=4)
+        if self.latex:
+            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[550],y[550]),xytext=(x[550],y[550]+0.8), fontsize=22, c='orange',rotation=4)
+        else:
+            ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[550],y[550]),xytext=(x[550],y[550]+0.8), fontsize=22, c='orange',rotation=4)
 
         return ax
     
@@ -318,6 +327,10 @@ class Menu:
         x = [convert_input_to_rational(xi) for xi in x]
         return x
 
+    def show_length_trace_plot(self, trace_reduction_results, length_reduction_results, title="Length Trace Plot"):
+        assert isinstance(trace_reduction_results, ReductionResults), "Error: trace_reduction_results must be of class ReductionResults."
+        assert isinstance(length_reduction_results, ReductionResults), "Error: length_reduction_results must be of class ReductionResults."
+        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=False, title=title)
 
 
     def process_and_display_inputs(self, x, event):
@@ -331,7 +344,7 @@ class Menu:
         
         self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
         self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
-        
+        self.show_length_trace_plot(trace_reduction_results, length_reduction_results, title=f"Length Trace Plot (X-coords: {tuple(x)})")
         
 
     def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
