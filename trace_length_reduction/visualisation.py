@@ -11,7 +11,12 @@ from examples.example_generation_functions import give_all_examples
 import pandas as pd
 
 
-
+def represent_matrix_as_latex(M):
+    return str(M).replace("Matrix","").replace("(", r"\begin{pmatrix} ").replace(")",r" \end{pmatrix}").replace("],",r" \\").replace(",",r" &").replace("[","").replace("]","")
+    
+def represent_matrix_as_text(M):
+    return str(M).replace("Matrix","").replace("(", "").replace(")","")
+    
 def so21_function(x):
     return 2*np.log(1/2*(x**2)-1+1/2*np.sqrt(x**2*(x**2-4)))
 
@@ -180,7 +185,7 @@ class LengthTracePlot:
             self.ax.set_ylabel('l(gamma)',  fontsize=self.fontsize)
 
         self.ax.set_title(plot_title)
-
+        
          
 
     def add_random_group_elements(self, ax, initial_generators, visited_generators_trace, visited_generators_length, num_distinct_random_group_elements=100):
@@ -211,7 +216,22 @@ class LengthTracePlot:
         traces = current_known_fundamental_group_elements_trace_length[:,0]
         lengths = current_known_fundamental_group_elements_trace_length[:,1]
 
-        ax.scatter(traces, lengths, c='red')
+        if self.latex:
+            ax.scatter(traces, lengths, c='red',label=r'Random Elements From $\left\langle'+represent_matrix_as_latex(alpha) + ","+represent_matrix_as_latex(beta) +r'\right\rangle$')
+        else:
+            ax.scatter(traces, lengths, c='red',label='Random Elements From '+represent_matrix_as_text(alpha) + ","+represent_matrix_as_text(beta))
+
+        visited_trace_trace_length = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators_trace])
+        visited_length_trace_length = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators_length])
+
+        # ax.scatter(traces, lengths, c='red')
+        ax.plot(visited_length_trace_length[:,0], visited_length_trace_length[:,1], c='cyan', label='Generalised Length Reduction 2nd Generator Path')
+        ax.scatter(visited_length_trace_length[:,0], visited_length_trace_length[:,1], c='cyan')
+        ax.plot(visited_trace_trace_length[:,0], visited_trace_trace_length[:,1], c='green', linestyle='dashed', label='Generalised Trace Reduction 2nd Generator Path')
+        ax.scatter(visited_trace_trace_length[:,0], visited_trace_trace_length[:,1], c='green')
+        ax.scatter([visited_length_trace_length[-1][0]], [visited_length_trace_length[-1][1]], c='blue', label='Length Reduction 2nd Generator Terminated Representative')
+        ax.scatter([visited_trace_trace_length[-1][0]], [visited_trace_trace_length[-1][1]], c='purple', marker="v", label='Trace Reduction 2nd Generator Terminated Representative')
+
 
         return ax
 
@@ -258,12 +278,14 @@ class LengthTracePlot:
 
         ax.set_xlim(0,trmax(1.81*y_max))
         ax.set_ylim(0,1.81*y_max)
+
        
         return ax
     
 
 
     def show_figure(self, timeout_sec=-1):
+        self.ax.legend(fontsize=19,loc='upper right')
         self.fig.show()
         plt.pause(timeout_sec)
 
