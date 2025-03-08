@@ -12,7 +12,7 @@ python3 -m pip install -e .
 
 ### Optional: LaTeX Rendering
 
-As part of the package, matplotlib figures will be produced with LaTeX rendering. This requires the host machine to have a LaTeX distribution installated with the `amsmath` package. When LaTeX rendering is activated, the following code is run:
+As part of the package, matplotlib figures will be produced with LaTeX rendering. This requires the host machine to provide a LaTeX distribution installated with the `amsmath` package. When LaTeX rendering is activated, the following code is run:
 ```
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)
@@ -55,7 +55,7 @@ In addition to the reduction results, two windows will open with a Length Trace 
 
 
 
-### Turning off LaTeX Rendering
+### Turn off LaTeX Rendering
 
 If a LaTeX distribution is unavailable for usage by `matplotlib`, LaTeX rendering can be optionally disabled. To turn off LaTeX rendering, uncheck the `LaTeX Rendering` checkmark.
 
