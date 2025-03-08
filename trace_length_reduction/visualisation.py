@@ -468,16 +468,29 @@ class Menu:
         
 
     def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
-        x_coord_input_frame = tk.Frame(frame)
-        x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
+        
+        all_elements_frame = tk.Frame(frame)
+        
+        x_coord_frame = tk.Frame(all_elements_frame)
+        
+        x_coord_tag_frame = tk.Frame(x_coord_frame)
+        x_coord_tags = ["t"," t'", "e01", "e10", "e12", "e21", "e20", "e02"]
+        x_coord_tag_texts = [tk.Label(x_coord_tag_frame, text=tag) for tag in x_coord_tags]
+        [text.pack(side="left",ipadx=12, ipady=3) for text in x_coord_tag_texts]
+        x_coord_tag_frame.pack()
 
+        x_coord_input_frame = tk.Frame(x_coord_frame)
+        x_coord_entries = [ttk.Entry(x_coord_input_frame, width=6) for i in range(8)]
         default_coords = default_inputs.get_coords()[0]
         [entry.insert(0,str(default_coords[i])) for i, entry in enumerate(x_coord_entries)]
         [entry.pack(side="left", ipady=5) for entry in x_coord_entries]
         x_coord_input_frame.pack(padx=5, pady=5)
 
+        x_coord_frame.pack(side="left")
 
-        minimise_button = ttk.Button(x_coord_input_frame, text="Minimise")
+        buttons_frame = tk.Frame(all_elements_frame)
+
+        minimise_button = ttk.Button(buttons_frame, text="Minimise")
         minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         minimise_button.bind("<ButtonPress>", lambda event:self.process_and_display_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event, latex_rendering=bool(latex_state.get())))
 
@@ -488,7 +501,7 @@ class Menu:
                 x_coord_entries[i].insert(0, str(new_inputs[i]))
 
         latex_state = tk.IntVar(value=1)
-        latex_check_button = tk.Checkbutton(x_coord_input_frame, text = "LaTeX Rendering", 
+        latex_check_button = tk.Checkbutton(buttons_frame, text = "LaTeX Rendering", 
                     variable = latex_state, 
                     onvalue = 1, 
                     offvalue = 0, 
@@ -498,14 +511,17 @@ class Menu:
         latex_check_button.select()
 
 
-        cube_button = ttk.Button(x_coord_input_frame, text="Cube Inputs (Optional)")
+        cube_button = ttk.Button(buttons_frame, text="Cube Inputs (Optional)")
         cube_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         cube_button.bind("<ButtonPress>", lambda event: self.cube_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], modify_inputs, event))
 
-        randomise_button = ttk.Button(x_coord_input_frame, text="Randomise Inputs (Optional)")
+        randomise_button = ttk.Button(buttons_frame, text="Randomise Inputs (Optional)")
         randomise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
         randomise_button.bind("<ButtonPress>", lambda event: self.randomise_inputs(modify_inputs, event))
 
+        buttons_frame.pack(side="left")
+
+        all_elements_frame.pack()
 
     def show_minimise_window(self, event, default_inputs=XCoords([sp.Number(1)]*8)):
         assert isinstance(default_inputs, XCoords), "Error: Default inputs must be of class XCoords."
