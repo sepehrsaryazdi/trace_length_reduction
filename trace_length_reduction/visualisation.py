@@ -79,6 +79,7 @@ def colour_results(results):
     return results_copy
 
 
+
 def results_table_to_latex(results_table, objective):
 
     results_table = colour_results(results_table)
@@ -101,22 +102,12 @@ def results_table_to_latex(results_table, objective):
 
     return table_string
 
+def convert_sympy_expr_to_latex(expression):
+    return str(expression).replace("**","^").replace("*","").replace("(","{").replace(")","}")
 
-def create_latex_table_string(results):
-    assert isinstance(results, ReductionResults), "Error: results must be of type ReductionResults."
-    
-    
-    report = results.get_report()
 
-    returned_expression = report["returned_expression"]
-    alpha_returned, beta_returned = report["returned_generators"]
-    coords = report["xcoords"]
-
-    def convert_sympy_expr_to_latex(expression):
-        return str(expression).replace("**","^").replace("*","").replace("(","{").replace(")","}")
-
-    trace_and_length_results_latex = {
-            '$\mathcal{X}$-coordinates': "$" + str(coords).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
+def generate_trace_and_length_results_latex(coords, returned_expression, alpha_returned, beta_returned):
+    return {'$\mathcal{X}$-coordinates': "$" + str(coords).replace("'","").replace("\\\\","\\").replace("(","\\left(").replace(")","\\right)") + "$",
             "$(A',B')$": "$(" + convert_sympy_expr_to_latex(returned_expression[0]) + ", " + convert_sympy_expr_to_latex(returned_expression[1])+ ")$", 
                 "$\\text{tr}(B')$": np.float64(sp.trace(beta_returned).evalf()),
                 "$\\text{tr}((B')^{-1})$": np.float64(sp.trace(beta_returned.inv()).evalf()),
@@ -133,6 +124,18 @@ def create_latex_table_string(results):
                 "$\\ell(A'B')$": calculate_geodesic_length(alpha_returned*beta_returned),
                 "$\\ell(A'(B')^{-1})$":calculate_geodesic_length(alpha_returned*(beta_returned.inv())),
                 "$\\ell([A',B'])$":calculate_geodesic_length(commutator(alpha_returned,beta_returned))}
+
+def create_latex_table_string(results):
+    assert isinstance(results, ReductionResults), "Error: results must be of type ReductionResults."
+    
+    
+    report = results.get_report()
+
+    returned_expression = report["returned_expression"]
+    alpha_returned, beta_returned = report["returned_generators"]
+    coords = report["xcoords"]
+
+    trace_and_length_results_latex = generate_trace_and_length_results_latex(coords, returned_expression, alpha_returned, beta_returned)
     
     results_table = pd.DataFrame()
 
@@ -148,24 +151,24 @@ class LengthTracePlot:
     """
     Class for initialising and visualising the length trace plot.
     """
-    def __init__(self, trace_reduction_results, length_reduction_results, latex=True, title="Length Trace Plot"):
-        assert isinstance(trace_reduction_results, ReductionResults), f"Error: {trace_reduction_results} must be an instance of ReductionResults."
-        assert isinstance(length_reduction_results, ReductionResults), f"Error: {length_reduction_results} must be an instance of ReductionResults."
+    def __init__(self, reduction_results, latex=True, title="Length Trace Plot"):
+        assert isinstance(reduction_results, ReductionResults), f"Error: {reduction_results} must be an instance of ReductionResults."
 
         self.latex = latex
         self.fontsize=20
 
-        coords = trace_reduction_results.get_report()["xcoords"]
-
+        coords = reduction_results.get_report()["xcoords"]
+        returned_expression = reduction_results.get_report()["returned_expression"]
+        objective = reduction_results.get_objective()
         if self.latex:
             self.load_latex()
-            plot_title = r"Length Trace Plot ($\mathcal{X}$-coordinates: $" + str(coords) + r")$"
+            plot_title =f"{objective.capitalize()}" + r" Reduction Length Trace Plot ($\mathcal{X}$-coordinates: $" + str(coords) + r")$"
         else:
-            plot_title = "Length Trace Plot (X-coordinates: " + str(coords) + ")"
-        window_title = "Length Trace Plot (X-coordinates: " + str(coords) + ")"
+            plot_title = f"{objective.capitalize()}" + "Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
+        window_title = f"{objective.capitalize()}" + " Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
         self.create_figure(plot_title, window_title)
         self.add_boundaries(self.ax)
-        self.add_random_group_elements(self.ax, trace_reduction_results.get_report()["initial_generators"], trace_reduction_results.get_report()["visited_generators"], length_reduction_results.get_report()["visited_generators"])
+        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"], reduction_results.get_report()["visited_generators"])
         self.show_figure()
     
     def load_latex(self):
@@ -188,11 +191,10 @@ class LengthTracePlot:
         
          
 
-    def add_random_group_elements(self, ax, initial_generators, visited_generators_trace, visited_generators_length, num_distinct_random_group_elements=100):
+    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, visited_generators, num_distinct_random_group_elements=100):
         
         alpha,beta = initial_generators
-        current_known_fundamental_group_elements = [commutator(alpha,beta)] + [alpha,beta] + [visited_generators_trace[i][0] for i in range(len(visited_generators_trace))] + [visited_generators_trace[i][1] for i in range(len(visited_generators_trace))] +  [visited_generators_length[i][0] for i in range(len(visited_generators_length))] + [visited_generators_length[i][1] for i in range(len(visited_generators_length))]
-        
+        current_known_fundamental_group_elements = [commutator(alpha,beta)] + [alpha,beta] + [visited_generators[i][0] for i in range(len(visited_generators))] + [visited_generators[i][1] for i in range(len(visited_generators))]
         unique_fundamental_group_elements = []
         for element in current_known_fundamental_group_elements:
             if element not in unique_fundamental_group_elements:
@@ -221,17 +223,21 @@ class LengthTracePlot:
         else:
             ax.scatter(traces, lengths, c='red',label='Random Elements From '+represent_matrix_as_text(alpha) + ","+represent_matrix_as_text(beta))
 
-        visited_trace_trace_length = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators_trace])
-        visited_length_trace_length = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators_length])
+        visited_trace_length_1st = np.array([[sp.trace(element[0]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators])
 
-        # ax.scatter(traces, lengths, c='red')
-        ax.plot(visited_length_trace_length[:,0], visited_length_trace_length[:,1], c='cyan', label='Generalised Length Reduction 2nd Generator Path')
-        ax.scatter(visited_length_trace_length[:,0], visited_length_trace_length[:,1], c='cyan')
-        ax.plot(visited_trace_trace_length[:,0], visited_trace_trace_length[:,1], c='green', linestyle='dashed', label='Generalised Trace Reduction 2nd Generator Path')
-        ax.scatter(visited_trace_trace_length[:,0], visited_trace_trace_length[:,1], c='green')
-        ax.scatter([visited_length_trace_length[-1][0]], [visited_length_trace_length[-1][1]], c='blue', label='Length Reduction 2nd Generator Terminated Representative')
-        ax.scatter([visited_trace_trace_length[-1][0]], [visited_trace_trace_length[-1][1]], c='purple', marker="v", label='Trace Reduction 2nd Generator Terminated Representative')
+        ax.plot(visited_trace_length_1st[:,0], visited_trace_length_1st[:,1], c='cyan', label=f'Generalised {objective.capitalize()} Reduction 1st Generator Path')
+        ax.scatter(visited_trace_length_1st[:,0], visited_trace_length_1st[:,1], c='cyan')
+        ax.scatter([visited_trace_length_1st[-1][0]], [visited_trace_length_1st[-1][1]], c='blue', label=f'{objective.capitalize()} Reduction 1st Generator Terminated Representative')
 
+        visited_trace_length_2nd = np.array([[sp.trace(element[1]).evalf(), calculate_geodesic_length(element[1])] for element in visited_generators])
+
+        ax.plot(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], c='green', label=f'Generalised {objective.capitalize()} Reduction 2nd Generator Path')
+        ax.scatter(visited_trace_length_2nd[:,0], visited_trace_length_2nd[:,1], c='green')
+        ax.scatter([visited_trace_length_2nd[-1][0]], [visited_trace_length_2nd[-1][1]], c='purple', label=f'{objective.capitalize()} Reduction 2nd Generator Terminated Representative')
+
+
+        trace_and_length_results_latex = generate_trace_and_length_results_latex(coords, returned_expression, alpha,beta)
+        print(trace_and_length_results_latex)
 
         return ax
 
@@ -284,7 +290,7 @@ class LengthTracePlot:
     
 
 
-    def show_figure(self, timeout_sec=-1):
+    def show_figure(self, timeout_sec=0.01):
         self.ax.legend(fontsize=19,loc='upper right')
         self.fig.show()
         plt.pause(timeout_sec)
@@ -413,10 +419,9 @@ class Menu:
         x = [convert_input_to_rational(xi) for xi in x]
         return x
 
-    def show_length_trace_plot(self, trace_reduction_results, length_reduction_results, latex_rendering=False):
-        assert isinstance(trace_reduction_results, ReductionResults), "Error: trace_reduction_results must be of class ReductionResults."
-        assert isinstance(length_reduction_results, ReductionResults), "Error: length_reduction_results must be of class ReductionResults."
-        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=latex_rendering)
+    def show_length_trace_plot(self, reduction_results, latex_rendering=False):
+        assert isinstance(reduction_results, ReductionResults), "Error: trace_reduction_results must be of class ReductionResults."
+        length_trace_plot = LengthTracePlot(reduction_results, latex=latex_rendering)
 
 
     def process_and_display_inputs(self, x, event, latex_rendering=False):
@@ -430,7 +435,8 @@ class Menu:
         
         self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
         self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
-        self.show_length_trace_plot(trace_reduction_results, length_reduction_results, latex_rendering=latex_rendering)
+        self.show_length_trace_plot(trace_reduction_results, latex_rendering=latex_rendering)
+        self.show_length_trace_plot(length_reduction_results, latex_rendering=latex_rendering)
         
 
     def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
