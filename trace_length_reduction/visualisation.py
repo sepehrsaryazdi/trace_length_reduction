@@ -150,10 +150,15 @@ class LengthTracePlot:
         self.latex = latex
         self.fontsize=20
 
+        coords = trace_reduction_results.get_report()["xcoords"]
+
         if self.latex:
             self.load_latex()
-
-        self.create_figure(title)
+            plot_title = r"Length Trace Plot ($\mathcal{X}$-coordinates: $" + str(coords) + r")$"
+        else:
+            plot_title = "Length Trace Plot (X-coordinates: " + str(coords) + ")"
+        window_title = "Length Trace Plot (X-coordinates: " + str(coords) + ")"
+        self.create_figure(plot_title, window_title)
         self.add_boundaries(self.ax)
         self.add_random_group_elements(self.ax, trace_reduction_results.get_report()["initial_generators"], trace_reduction_results.get_report()["visited_generators"], length_reduction_results.get_report()["visited_generators"])
         self.show_figure()
@@ -164,9 +169,9 @@ class LengthTracePlot:
         mpl.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'
     
 
-    def create_figure(self, title):
+    def create_figure(self, plot_title, window_title):
         self.fig, self.ax = plt.subplots(figsize = (9, 6))
-        self.fig.canvas.manager.set_window_title(title)
+        self.fig.canvas.manager.set_window_title(window_title)
         if self.latex:
             self.ax.set_xlabel(r'tr$(\gamma)$',  fontsize=self.fontsize)
             self.ax.set_ylabel(r'$\ell(\gamma)$',  fontsize=self.fontsize)
@@ -174,7 +179,8 @@ class LengthTracePlot:
             self.ax.set_xlabel('tr(gamma)',  fontsize=self.fontsize)
             self.ax.set_ylabel('l(gamma)',  fontsize=self.fontsize)
 
-        self.ax.set_title(title)
+        self.ax.set_title(plot_title)
+
          
 
     def add_random_group_elements(self, ax, initial_generators, visited_generators_trace, visited_generators_length, num_distinct_random_group_elements=100):
@@ -385,16 +391,16 @@ class Menu:
         x = [convert_input_to_rational(xi) for xi in x]
         return x
 
-    def show_length_trace_plot(self, trace_reduction_results, length_reduction_results, title="Length Trace Plot"):
+    def show_length_trace_plot(self, trace_reduction_results, length_reduction_results, latex_rendering=False):
         assert isinstance(trace_reduction_results, ReductionResults), "Error: trace_reduction_results must be of class ReductionResults."
         assert isinstance(length_reduction_results, ReductionResults), "Error: length_reduction_results must be of class ReductionResults."
-        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=True, title=title)
+        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=latex_rendering)
 
 
-    def process_and_display_inputs(self, x, event):
+    def process_and_display_inputs(self, x, event, latex_rendering=False):
         
         x = self.process_inputs(x, event)
-        
+    
         trace_length_reduction_interface = TraceLengthReductionInterface(XCoords(x))
 
         trace_reduction_results = trace_length_reduction_interface.trace_reduction()
@@ -402,7 +408,7 @@ class Menu:
         
         self.display_results(trace_reduction_results, title=f"Trace Reduction Results (X-coords: {tuple(x)})")
         self.display_results(length_reduction_results, title=f"Length Reduction Results (X-coords: {tuple(x)})")
-        self.show_length_trace_plot(trace_reduction_results, length_reduction_results, title=f"Length Trace Plot (X-coords: {tuple(x)})")
+        self.show_length_trace_plot(trace_reduction_results, length_reduction_results, latex_rendering=latex_rendering)
         
 
     def add_minimise_buttons(self, event, frame, default_inputs=XCoords([sp.Number(1)]*8)):
@@ -417,13 +423,24 @@ class Menu:
 
         minimise_button = ttk.Button(x_coord_input_frame, text="Minimise")
         minimise_button.pack(side="left", padx=25, ipadx=20, ipady=20)
-        minimise_button.bind("<ButtonPress>", lambda event:self.process_and_display_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event))
+        minimise_button.bind("<ButtonPress>", lambda event:self.process_and_display_inputs([x_coord_entries[i].get() for i in range(len(x_coord_entries))], event, latex_rendering=bool(latex_state.get())))
 
         def modify_inputs(new_inputs):
             assert isinstance(new_inputs, list) and len(new_inputs) == len(x_coord_entries), "Error: new_inputs must be a list of same length as x coordinates."
             for i in range(len(new_inputs)):
                 x_coord_entries[i].delete(0,tk.END)
                 x_coord_entries[i].insert(0, str(new_inputs[i]))
+
+        latex_state = tk.IntVar(value=1)
+        latex_check_button = tk.Checkbutton(x_coord_input_frame, text = "LaTeX Rendering", 
+                    variable = latex_state, 
+                    onvalue = 1, 
+                    offvalue = 0, 
+                    height = 2, 
+                    width = 10)
+        latex_check_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        latex_check_button.select()
+
 
         cube_button = ttk.Button(x_coord_input_frame, text="Cube Inputs (Optional)")
         cube_button.pack(side="left", padx=25, ipadx=20, ipady=20)
