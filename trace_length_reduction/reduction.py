@@ -169,7 +169,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-def main_algorithm(alpha, beta, objective, visited_generators,expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators,expressions, moves_applied, verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
@@ -480,7 +480,7 @@ class TraceLengthReductionInterface():
     
     def trace_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('trace')
-        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[], verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[], expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=verbose)
         
         # print(self.generators)
         # print(self.canonical_generators)
@@ -507,7 +507,7 @@ class TraceLengthReductionInterface():
 
     def length_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('length')
-        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[], verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[],expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=verbose)
         reduction_results = ReductionResults(xcoords=self.x,
                                             objective=objective,
                                             returned_expression=expressions[-1],
