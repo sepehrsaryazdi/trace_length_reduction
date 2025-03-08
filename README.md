@@ -10,6 +10,16 @@ To install, run the following code. This will install the trace_length_reduction
 python3 -m pip install -e .
 ```
 
+### Optional: LaTeX Rendering
+
+As part of the package, matplotlib figures will be produced with LaTeX rendering. This requires the host machine to have a LaTeX distribution installated with the `amsmath` package. When LaTeX rendering is activated, the following code is run:
+```
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+plt.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'
+```
+
 ## Running
 
 To run, run the following code:
@@ -24,7 +34,7 @@ After running, a visual interface appears as shown below.
 
 ![Trace Length Reduction Algorithm Menu](readme_pictures/menu.png)
 
-Click on `Minimise X-coordinates` to enter specific X-coordinates, or click `Examples` to see a list of example X-coordinates. For ease of use, you can click `Minimise X-coordinates` multiple times to open new windows and enter different coordinatoes.
+Click on `Minimise X-coordinates` to enter specific X-coordinates, or click `Examples` to see a list of example X-coordinates. For ease of use, you can click `Minimise X-coordinates` multiple times to open new windows and enter different coordinates.
 
 ![Trace Length Reduction Examples Menu](readme_pictures/examples.png)
 
@@ -33,6 +43,31 @@ To optionally cube the X-coordinate entries, click `Cube Inputs (Optional)`. To 
 ![Trace Length Reduction Example Reduction Results](readme_pictures/reduction_results.png)
 
 To copy the output text to clipboard, click `Copy Output`.
+
+In addition to the reduction results, two windows will open with a Length Trace Plot for the trace and length reduction procedures respectively. Example outputs are shown below.
+
+
+![Trace Reduction Length Trace Plot](readme_pictures/length_reduction_example.png)
+
+![Length Reduction Length Trace Plot Example](readme_pictures/trace_reduction_example.png)
+
+
+
+
+
+### Turning off LaTeX Rendering
+
+If a LaTeX distribution is unavailable for usage by `matplotlib`, LaTeX rendering can be optionally disabled. To turn off LaTeX rendering, uncheck the `LaTeX Rendering` checkmark.
+
+![Unchecked LaTeX Rendering Checkbox](readme_pictures/turn_off_latex.png)
+
+After clicking `Minimise`, this will produce the Length Trace Plot with standard text as shown below.
+
+![Length Reduction Length Trace Plot Non-LaTeX Example](readme_pictures/no_latex_example.png)
+
+
+
+
 
 <!-- 
 ## Installation
