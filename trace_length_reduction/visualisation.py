@@ -148,6 +148,7 @@ class LengthTracePlot:
         assert isinstance(length_reduction_results, ReductionResults), f"Error: {length_reduction_results} must be an instance of ReductionResults."
 
         self.latex = latex
+        self.fontsize=20
 
         if self.latex:
             self.load_latex()
@@ -165,36 +166,57 @@ class LengthTracePlot:
     def create_figure(self, title):
         self.fig, self.ax = plt.subplots(figsize = (9, 6))
         self.fig.canvas.manager.set_window_title(title)
+        if self.latex:
+            self.ax.set_xlabel(r'tr$(\gamma)$',  fontsize=self.fontsize)
+            self.ax.set_ylabel(r'$l(\gamma)$',  fontsize=self.fontsize)
+        else:
+            self.ax.set_xlabel('tr(gamma)',  fontsize=self.fontsize)
+            self.ax.set_ylabel('l(gamma)',  fontsize=self.fontsize)
+
         # self.ax.plot([1,2,3],[4,5,6])
         self.ax.set_title(title)
 
-    def add_boundaries(self, ax, x_max=1000, y_max=1000):
+    def add_boundaries(self, ax, y_max=10):
         assert isinstance(ax, plt.Axes), "Error: ax must be a plt.Axes object."
         
-        y = np.linspace(0,x_max, 10000)
-        x = 3/(2**(2/3))*(np.exp(y)+1)**(2/3) * np.exp(-y/3)
-        ax.plot(x,y, c='blue')
-        if self.latex:
-            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[170],y[170]),xytext=(x[170],y[170]+0.8), fontsize=50, c='blue',rotation=5)
-        else:
-            ax.annotate('l_max(tr(gamma))', xy=(x[170],y[170]),xytext=(x[170],y[170]+0.8), fontsize=50, c='blue',rotation=5)
+        def trmax(l):
+            return 3/(2**(2/3))*(np.exp(l)+1)**(2/3) * np.exp(-l/3)
+        def trmin(l):
+            return (np.exp(l)+2)* np.exp(-l/3)
+        
+        text_position_index = 2500
 
-        y = np.linspace(0,y_max, 10000)
-        x = (np.exp(y)+2)* np.exp(-y/3)
-        ax.plot(x,y, c='blue')
-        if self.latex:
-            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[95],y[95]),xytext=(x[95],y[95]-1.8), fontsize=50, c='blue',rotation=3)
-        else:
-            ax.annotate('l_min(tr(gamma))', xy=(x[95],y[95]),xytext=(x[95],y[95]-1.8), fontsize=50, c='blue',rotation=3)
 
-        x = np.linspace(0, x_max, 1000)
+        x = np.linspace(0, trmin(y_max), 10000)
         y = so21_function(np.sqrt(x+1))
         ax.plot(x,y, c='orange')
         if self.latex:
-            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[550],y[550]),xytext=(x[550],y[550]+0.8), fontsize=22, c='orange',rotation=4)
+            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=4)
         else:
-            ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[550],y[550]),xytext=(x[550],y[550]+0.8), fontsize=22, c='orange',rotation=4)
+            ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=8)
 
+        
+        text_position_index = 8000
+
+        y = np.linspace(0,1.81*y_max, 10000)
+        x = trmax(y)
+        ax.plot(x,y, c='blue')
+        if self.latex:
+            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=5)
+        else:
+            ax.annotate('l_max(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
+
+        text_position_index = 8300
+
+        y = np.linspace(0,y_max, 10000)
+        x = trmin(y)
+        ax.plot(x,y, c='blue')
+        if self.latex:
+            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=3)
+        else:
+            ax.annotate('l_min(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
+
+       
         return ax
     
 
