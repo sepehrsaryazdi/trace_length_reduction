@@ -169,12 +169,11 @@ class LengthTracePlot:
         self.fig.canvas.manager.set_window_title(title)
         if self.latex:
             self.ax.set_xlabel(r'tr$(\gamma)$',  fontsize=self.fontsize)
-            self.ax.set_ylabel(r'$l(\gamma)$',  fontsize=self.fontsize)
+            self.ax.set_ylabel(r'$\ell(\gamma)$',  fontsize=self.fontsize)
         else:
             self.ax.set_xlabel('tr(gamma)',  fontsize=self.fontsize)
             self.ax.set_ylabel('l(gamma)',  fontsize=self.fontsize)
 
-        # self.ax.plot([1,2,3],[4,5,6])
         self.ax.set_title(title)
          
 
@@ -183,12 +182,6 @@ class LengthTracePlot:
         alpha,beta = initial_generators
         current_known_fundamental_group_elements = [commutator(alpha,beta)] + [alpha,beta] + [visited_generators_trace[i][0] for i in range(len(visited_generators_trace))] + [visited_generators_trace[i][1] for i in range(len(visited_generators_trace))] +  [visited_generators_length[i][0] for i in range(len(visited_generators_length))] + [visited_generators_length[i][1] for i in range(len(visited_generators_length))]
         
-        # print((alpha.inv(),beta.inv()))
-        # print(visited_generators_trace[0])
-        # print([(calculate_geodesic_length(element[0]), calculate_geodesic_length(element[1])) for element in visited_generators_trace])
-
-        # exit()
-
         unique_fundamental_group_elements = []
         for element in current_known_fundamental_group_elements:
             if element not in unique_fundamental_group_elements:
@@ -207,14 +200,7 @@ class LengthTracePlot:
             new_element = action * next_element_to_apply_action
             if new_element not in current_known_fundamental_group_elements:
                 current_known_fundamental_group_elements.append(new_element)
-                
-        # unique_fundamental_group_elements = []
-        # for element in current_known_fundamental_group_elements:
-        #     if element not in unique_fundamental_group_elements:
-        #         unique_fundamental_group_elements.append(element)
-
-        # current_known_fundamental_group_elements = unique_fundamental_group_elements
-        
+                    
         current_known_fundamental_group_elements_trace_length = np.array([[sp.trace(element).evalf(), calculate_geodesic_length(element)] for element in current_known_fundamental_group_elements])
         traces = current_known_fundamental_group_elements_trace_length[:,0]
         lengths = current_known_fundamental_group_elements_trace_length[:,1]
@@ -238,7 +224,7 @@ class LengthTracePlot:
         y = so21_function(np.sqrt(x+1))
         ax.plot(x,y, c='orange')
         if self.latex:
-            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=9)
+            ax.annotate(r'$\ell_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=9)
         else:
             ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=9)
 
@@ -249,7 +235,7 @@ class LengthTracePlot:
         x = trmax(y)
         ax.plot(x,y, c='blue')
         if self.latex:
-            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
+            ax.annotate(r'$\ell_{\text{max}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
         else:
             ax.annotate('l_max(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
 
@@ -259,7 +245,7 @@ class LengthTracePlot:
         x = trmin(y)
         ax.plot(x,y, c='blue')
         if self.latex:
-            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
+            ax.annotate(r'$\ell_{\text{min}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
         else:
             ax.annotate('l_min(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
 
