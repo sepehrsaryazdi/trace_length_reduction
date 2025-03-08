@@ -155,6 +155,7 @@ class LengthTracePlot:
 
         self.create_figure(title)
         self.add_boundaries(self.ax)
+        self.add_random_group_elements(self.ax, trace_reduction_results.get_report()["initial_generators"], trace_reduction_results.get_report()["visited_generators"], length_reduction_results.get_report()["visited_generators"])
         self.show_figure()
     
     def load_latex(self):
@@ -175,6 +176,52 @@ class LengthTracePlot:
 
         # self.ax.plot([1,2,3],[4,5,6])
         self.ax.set_title(title)
+         
+
+    def add_random_group_elements(self, ax, initial_generators, visited_generators_trace, visited_generators_length, num_distinct_random_group_elements=100):
+        
+        alpha,beta = initial_generators
+        current_known_fundamental_group_elements = [commutator(alpha,beta)] + [alpha,beta] + [visited_generators_trace[i][0] for i in range(len(visited_generators_trace))] + [visited_generators_trace[i][1] for i in range(len(visited_generators_trace))] +  [visited_generators_length[i][0] for i in range(len(visited_generators_length))] + [visited_generators_length[i][1] for i in range(len(visited_generators_length))]
+        
+        # print((alpha.inv(),beta.inv()))
+        # print(visited_generators_trace[0])
+        # print([(calculate_geodesic_length(element[0]), calculate_geodesic_length(element[1])) for element in visited_generators_trace])
+
+        # exit()
+
+        unique_fundamental_group_elements = []
+        for element in current_known_fundamental_group_elements:
+            if element not in unique_fundamental_group_elements:
+                unique_fundamental_group_elements.append(element)
+
+        current_known_fundamental_group_elements = unique_fundamental_group_elements
+
+
+        while len(current_known_fundamental_group_elements) < num_distinct_random_group_elements:
+            use_beta = int(np.round(np.random.random_sample())) # if 0, use alpha, otherwise use beta
+            power = (-1)**int(np.round(np.random.random_sample())) # if 0, use +1 power. otherwise use -1 power
+            action = beta if use_beta else alpha
+            action = action.inv() if power < 0 else action
+            next_element_to_apply_action_index = np.random.choice([i for i in range(len(current_known_fundamental_group_elements))])
+            next_element_to_apply_action = current_known_fundamental_group_elements[int(next_element_to_apply_action_index)]
+            new_element = action * next_element_to_apply_action
+            if new_element not in current_known_fundamental_group_elements:
+                current_known_fundamental_group_elements.append(new_element)
+                
+        # unique_fundamental_group_elements = []
+        # for element in current_known_fundamental_group_elements:
+        #     if element not in unique_fundamental_group_elements:
+        #         unique_fundamental_group_elements.append(element)
+
+        # current_known_fundamental_group_elements = unique_fundamental_group_elements
+        
+        current_known_fundamental_group_elements_trace_length = np.array([[sp.trace(element).evalf(), calculate_geodesic_length(element)] for element in current_known_fundamental_group_elements])
+        traces = current_known_fundamental_group_elements_trace_length[:,0]
+        lengths = current_known_fundamental_group_elements_trace_length[:,1]
+
+        ax.scatter(traces, lengths, c='red')
+
+        return ax
 
     def add_boundaries(self, ax, y_max=10):
         assert isinstance(ax, plt.Axes), "Error: ax must be a plt.Axes object."
@@ -216,6 +263,9 @@ class LengthTracePlot:
         else:
             ax.annotate('l_min(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
 
+
+        ax.set_xlim(0,trmax(1.81*y_max))
+        ax.set_ylim(0,1.81*y_max)
        
         return ax
     

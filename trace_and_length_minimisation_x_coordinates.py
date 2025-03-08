@@ -656,7 +656,7 @@ for example_function in give_all_examples():
             )
     print('---------------------------------')
 
-    #plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
+    plot_eigenvalues_and_traces(alpha,beta, visited_generators_trace,visited_generators_length, num_distinct_random_group_elements=100, blocking=False)
 
 results_tr = results_tr.round(2)
 results_l = results_l.round(2)

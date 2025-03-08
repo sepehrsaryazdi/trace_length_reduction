@@ -46,7 +46,7 @@ def calculate_geodesic_length_high_precision(gamma,precision=100): # slower impl
     gamma_eigenvalues = list(gamma.eigenvals())
     eigenvalues_to_precision = [N(gamma_eigenvalues[i],precision).as_real_imag()[0] for i in range(len(gamma_eigenvalues))] # note that the real part is taken, the imaginary part is theoretically zero and negligible for a given rounded number.
     return np.float64(sp.log(sp.Max(*eigenvalues_to_precision)/sp.Min(*eigenvalues_to_precision)))
-
+    
 def calculate_geodesic_length(gamma):
     return calculate_geodesic_length_high_precision(gamma)
 
@@ -169,7 +169,7 @@ def get_bounds(alpha,beta,objective,move, delta=0):
     
     return [k0, k1]
 
-def main_algorithm(alpha, beta, objective, visited_generators=[],expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=False):
+def main_algorithm(alpha, beta, objective, visited_generators,expressions=[(sp.Symbol('A',commutative=False),sp.Symbol('B',commutative=False))], moves_applied=[], verbose=False):
     assert isinstance(alpha, sp.Matrix), "Error: alpha is not a sp.Matrix"
     assert isinstance(beta, sp.Matrix), "Error: beta is not a sp.Matrix"
 
@@ -405,7 +405,7 @@ class ReductionResults():
             assert isinstance(visited_generators[i], tuple) and len(visited_generators[i]) == 2, "Error: moves_applied must contain tuples with two elements."
             assert isinstance(visited_generators[i][0], sp.Matrix) and isinstance(visited_generators[i][1], sp.Matrix), "Error: each tuple in visited_generators must be a sympy matrix."
         
-        self._report["visited_generators"] = visited_generators
+        self._report["visited_generators"] = visited_generators.copy()
 
         return self._report.copy()
     
@@ -480,8 +480,13 @@ class TraceLengthReductionInterface():
     
     def trace_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('trace')
-        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_trace, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[], verbose=verbose)
         
+        # print(self.generators)
+        # print(self.canonical_generators)
+        # print(visited_generators_trace[0])
+        # exit(0)
+
         reduction_results = ReductionResults(xcoords=self.x,
                                             objective=objective,
                                             returned_expression=expressions[-1],
@@ -502,7 +507,7 @@ class TraceLengthReductionInterface():
 
     def length_reduction(self, verbose=False) -> ReductionResults:
         objective = Objective('length')
-        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), verbose=verbose)
+        alpha_returned, beta_returned, visited_generators_length, expressions, moves_applied = main_algorithm(*self.canonical_generators, objective.get_objective(), visited_generators=[], verbose=verbose)
         reduction_results = ReductionResults(xcoords=self.x,
                                             objective=objective,
                                             returned_expression=expressions[-1],
@@ -510,7 +515,7 @@ class TraceLengthReductionInterface():
                                             initial_generators=tuple(self.canonical_generators),
                                             pre_canonical_generators=tuple(self.generators))
         reduction_results.update_moves_applied(moves_applied, expressions)
-        reduction_results.update_visited_generators(visited_generators_length)
+        reduction_results.update_visited_generators(visited_generators_length.copy())
 
         # print(expressions)
         # print(moves_applied)
