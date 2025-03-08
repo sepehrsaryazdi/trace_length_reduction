@@ -238,9 +238,9 @@ class LengthTracePlot:
         y = so21_function(np.sqrt(x+1))
         ax.plot(x,y, c='orange')
         if self.latex:
-            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=4)
+            ax.annotate(r'$l_{\text{SO}(2,1)}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=9)
         else:
-            ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=8)
+            ax.annotate('l_SO(2,1)(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+0.8), fontsize=self.fontsize, c='orange',rotation=9)
 
         
         text_position_index = 8000
@@ -249,7 +249,7 @@ class LengthTracePlot:
         x = trmax(y)
         ax.plot(x,y, c='blue')
         if self.latex:
-            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=5)
+            ax.annotate(r'$l_{\text{max}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
         else:
             ax.annotate('l_max(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]+1.2), fontsize=self.fontsize, c='blue',rotation=10)
 
@@ -259,7 +259,7 @@ class LengthTracePlot:
         x = trmin(y)
         ax.plot(x,y, c='blue')
         if self.latex:
-            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=3)
+            ax.annotate(r'$l_{\text{min}}(\text{tr}(\gamma))$', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
         else:
             ax.annotate('l_min(tr(gamma))', xy=(x[text_position_index],y[text_position_index]),xytext=(x[text_position_index],y[text_position_index]-1.2), fontsize=self.fontsize, c='blue',rotation=7)
 
@@ -402,7 +402,7 @@ class Menu:
     def show_length_trace_plot(self, trace_reduction_results, length_reduction_results, title="Length Trace Plot"):
         assert isinstance(trace_reduction_results, ReductionResults), "Error: trace_reduction_results must be of class ReductionResults."
         assert isinstance(length_reduction_results, ReductionResults), "Error: length_reduction_results must be of class ReductionResults."
-        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=False, title=title)
+        length_trace_plot = LengthTracePlot(trace_reduction_results, length_reduction_results, latex=True, title=title)
 
 
     def process_and_display_inputs(self, x, event):
