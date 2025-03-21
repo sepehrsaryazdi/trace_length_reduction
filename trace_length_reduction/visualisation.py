@@ -168,7 +168,7 @@ class LengthTracePlot:
         window_title = f"{objective.capitalize()}" + " Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
         self.create_figure(plot_title, window_title)
         self.add_boundaries(self.ax)
-        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"],reduction_results.get_report()["returned_generators"], reduction_results.get_report()["visited_generators"])
+        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"],reduction_results.get_report()["returned_generators"], reduction_results.get_report()["visited_generators"], reduction_results.get_report()["expressions"])
         self.show_figure()
     
     def load_latex(self):
@@ -188,19 +188,13 @@ class LengthTracePlot:
             self.ax.set_ylabel('l(gamma)',  fontsize=self.fontsize)
 
         self.ax.set_title(plot_title)
-        
-         
-
-    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, returned_generators, visited_generators, num_distinct_random_group_elements=200):
-        
+    
+    def create_random_group_elements(self, initial_generators, returned_generators, visited_generators, num_distinct_random_group_elements=200):
         alpha,beta = initial_generators
-        alpha_returned,beta_returned = returned_generators
-
+        alpha_returned, beta_returned = returned_generators
         peripheral = commutator(alpha_returned,beta_returned)
         AB = alpha_returned*beta_returned
-        AB_inv = alpha_returned*(beta_returned.inv())
-
-
+        AB_inv = alpha_returned*(beta_returned**(-1))
         current_known_fundamental_group_elements = [peripheral, AB, AB_inv] + [alpha,beta] + [visited_generators[i][0] for i in range(len(visited_generators))] + [visited_generators[i][1] for i in range(len(visited_generators))]
         unique_fundamental_group_elements = []
         for element in current_known_fundamental_group_elements:
@@ -214,13 +208,28 @@ class LengthTracePlot:
             use_beta = int(np.round(np.random.random_sample())) # if 0, use alpha, otherwise use beta
             power = (-1)**int(np.round(np.random.random_sample())) # if 0, use +1 power. otherwise use -1 power
             action = beta if use_beta else alpha
-            action = action.inv() if power < 0 else action
+            action = action**(-1) if power < 0 else action
             next_element_to_apply_action_index = np.random.choice([i for i in range(len(current_known_fundamental_group_elements))])
             next_element_to_apply_action = current_known_fundamental_group_elements[int(next_element_to_apply_action_index)]
             new_element = action * next_element_to_apply_action
             if new_element not in current_known_fundamental_group_elements:
                 current_known_fundamental_group_elements.append(new_element)
-                    
+
+        return current_known_fundamental_group_elements
+
+    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, returned_generators, visited_generators, expressions, num_distinct_random_group_elements=200):
+        
+        alpha,beta = initial_generators
+        alpha_returned,beta_returned = returned_generators
+
+        peripheral = commutator(alpha_returned,beta_returned)
+        
+        AB = alpha_returned*beta_returned
+
+        AB_inv = alpha_returned*(beta_returned.inv())
+
+        current_known_fundamental_group_elements = self.create_random_group_elements(initial_generators, returned_generators, visited_generators, num_distinct_random_group_elements)
+        
         current_known_fundamental_group_elements_trace_length = np.array([[sp.trace(element).evalf(), calculate_geodesic_length(element)] for element in current_known_fundamental_group_elements])
         traces = current_known_fundamental_group_elements_trace_length[:,0]
         lengths = current_known_fundamental_group_elements_trace_length[:,1]
