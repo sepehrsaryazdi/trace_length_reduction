@@ -229,10 +229,21 @@ class LengthTracePlot:
         AB_inv = alpha_returned*(beta_returned.inv())
 
         current_known_fundamental_group_elements = self.create_random_group_elements(initial_generators, returned_generators, visited_generators, num_distinct_random_group_elements)
-        
+        current_known_fundamental_group_elements_sym = self.create_random_group_elements((sp.Symbol("A",commutative=False),sp.Symbol("B",commutative=False)), returned_expression, expressions, num_distinct_random_group_elements)
+
+  
+
         current_known_fundamental_group_elements_trace_length = np.array([[sp.trace(element).evalf(), calculate_geodesic_length(element)] for element in current_known_fundamental_group_elements])
         traces = current_known_fundamental_group_elements_trace_length[:,0]
         lengths = current_known_fundamental_group_elements_trace_length[:,1]
+
+        length_trace_values = np.array([(ai, bi) for ai, bi in zip(lengths, traces)],
+             dtype = np.dtype([('x', float), ('y', float)]))
+        
+        current_known_fundamental_group_elements_sym = np.array(current_known_fundamental_group_elements_sym)
+        current_known_fundamental_group_elements_sym = current_known_fundamental_group_elements_sym[np.argsort(length_trace_values)]
+
+        # print(current_known_fundamental_group_elements_sym)
 
         if self.latex:
             ax.scatter(traces, lengths, c='red',label=r'Random Elements From $\left\langle'+represent_matrix_as_latex(alpha) + ","+represent_matrix_as_latex(beta) +r'\right\rangle$')

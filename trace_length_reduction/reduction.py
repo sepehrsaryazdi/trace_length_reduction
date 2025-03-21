@@ -90,7 +90,7 @@ def X_k(alpha,beta,k):
 
 
 def commutator(alpha,beta):
-    return alpha*beta*(alpha.inv())*(beta.inv())
+    return alpha*beta*(alpha**(-1))*(beta**(-1))
 
 def diagonalise_in_order(B, precision=100):
     """
