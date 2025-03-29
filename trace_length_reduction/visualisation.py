@@ -372,8 +372,8 @@ class LengthTracePlot:
             elements_symbols = []
 
             for i in range(-10, 10):
-                elements_matrices.append(B*(A**i))
-                elements_symbols.append(B_s*(A_s**i))
+                elements_matrices.append(A*(B**i))
+                elements_symbols.append(A_s*(B_s**i))
 
             f, ax = plt.subplots(figsize = (9, 6))
             ticks = [r"$" +str(s).replace("**","^").replace("*","").replace("(","{").replace(")","}").replace("A'","(A')").replace("B'","(B')") + r"$" for s in elements_symbols]
