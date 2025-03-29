@@ -366,7 +366,7 @@ class LengthTracePlot:
         if objective == "length":
             
             A, B = returned_generators
-            A_s, B_s = (sp.Symbol("(A')",commutative=False),sp.Symbol("(B')",commutative=False))
+            A_s, B_s = (sp.Symbol("A'",commutative=False),sp.Symbol("B'",commutative=False))
             
             elements_matrices = []
             elements_symbols = []
@@ -376,12 +376,12 @@ class LengthTracePlot:
                 elements_symbols.append(B_s*(A_s**i))
 
             f, ax = plt.subplots(figsize = (9, 6))
-            ticks = [r"$" +str(s).replace("**","^").replace("*","").replace("(","{").replace(")","}") + r"$" for s in elements_symbols]
+            ticks = [r"$" +str(s).replace("**","^").replace("*","").replace("(","{").replace(")","}").replace("A'","(A')").replace("B'","(B')") + r"$" for s in elements_symbols]
             ax.plot(ticks, [calculate_geodesic_length(e) for e in elements_matrices])
-            ax.set_xticklabels(ticks, rotation=45, ha='right',fontsize=self.fontsize - 5)
+            ax.set_xticklabels(ticks, rotation=45, ha='right',fontsize=self.fontsize - 10)
             ax.set_ylabel(r"$\ell(\gamma)$",fontsize=self.fontsize)
             ax.set_xlabel("$\gamma$",fontsize=self.fontsize)
-            ax.set_title("Length by Element",fontsize=self.fontsize)
+            ax.set_title(title.replace("Length Trace Plot", "Length by Element"),fontsize=self.fontsize)
             plt.show()
 
         return ax
