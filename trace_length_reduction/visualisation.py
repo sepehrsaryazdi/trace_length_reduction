@@ -147,6 +147,71 @@ def create_latex_table_string(results):
     return results_table_to_latex(results_table, report["objective"])
 
 
+class TraceLengthElements:
+    """
+    Class for visualising elements found during reduction, along with their length and traces.
+    """
+    def __init__(self, elements:np.ndarray, title="Length Trace"):
+        assert isinstance(elements, np.ndarray), "Error: elements must be of type list."
+        for element in elements:
+            assert isinstance(element, sp.Expr), "Error: element must be of type sp.Matrix"
+        
+
+
+        trace_length_elements_window = tk.Toplevel()
+        trace_length_elements_window.wm_title(title)
+
+        canvas = tk.Canvas(trace_length_elements_window)
+        scrollbar = ttk.Scrollbar(trace_length_elements_window, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", ipadx=200, expand=True)
+        scrollbar.pack(side="right", fill="y", ipady=300)
+
+
+        # def copy_to_clipboard(text):
+        #     trace_length_elements_window.clipboard_clear()
+        #     trace_length_elements_window.clipboard_append(text)
+
+        # trace_length_elements_frame = tk.Frame(scrollable_frame)
+        # copy_trace_length_elements_to_clipboard_button = ttk.Button(trace_length_elements_frame, text="Copy Output")
+        # copy_trace_length_elements_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        # copy_trace_length_elements_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(text_result_string))
+
+        # text_trace_length_elements = tk.Text(trace_length_elements_frame)
+        # text_trace_length_elements.pack(side="left", ipady=150)
+        # text_trace_length_elements.bind("<KeyPress>", lambda x:x)
+        # # text.insert("end", "Hello"+"\n"*40+"World.")
+        # text_trace_length_elements.insert("end", text_result_string)
+
+        # trace_length_elements_frame.pack()
+
+
+        # table_string = create_latex_table_string(trace_length_elements)
+
+
+        # table_frame = tk.Frame(scrollable_frame)
+        # copy_table_to_clipboard_button = ttk.Button(table_frame, text="Copy Output")
+        # copy_table_to_clipboard_button.pack(side="left", padx=25, ipadx=20, ipady=20)
+        # copy_table_to_clipboard_button.bind("<ButtonPress>", lambda event : copy_to_clipboard(table_string))
+        # text_table = tk.Text(table_frame)
+        # text_table.pack(side="left", ipady=150)
+        # text_table.bind("<KeyPress>", lambda x:x)
+        # # text.insert("end", "Hello"+"\n"*40+"World.")
+        # text_table.insert("end", table_string)
+
+        # table_frame.pack()
+
+
 class LengthTracePlot:
     """
     Class for initialising and visualising the length trace plot.
@@ -168,7 +233,7 @@ class LengthTracePlot:
         window_title = f"{objective.capitalize()}" + " Reduction Length Trace Plot (X-coordinates: " + str(coords) + ")"
         self.create_figure(plot_title, window_title)
         self.add_boundaries(self.ax)
-        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"],reduction_results.get_report()["returned_generators"], reduction_results.get_report()["visited_generators"], reduction_results.get_report()["expressions"])
+        self.add_random_group_elements(self.ax, coords, reduction_results.get_objective(), returned_expression, reduction_results.get_report()["initial_generators"],reduction_results.get_report()["returned_generators"], reduction_results.get_report()["visited_generators"], reduction_results.get_report()["expressions"], title=window_title)
         self.show_figure()
     
     def load_latex(self):
@@ -217,7 +282,7 @@ class LengthTracePlot:
 
         return current_known_fundamental_group_elements
 
-    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, returned_generators, visited_generators, expressions, num_distinct_random_group_elements=200):
+    def add_random_group_elements(self, ax, coords, objective, returned_expression, initial_generators, returned_generators, visited_generators, expressions, num_distinct_random_group_elements=200, title="Length Trace Plot"):
         
         alpha,beta = initial_generators
         alpha_returned,beta_returned = returned_generators
@@ -244,6 +309,8 @@ class LengthTracePlot:
         current_known_fundamental_group_elements_sym = current_known_fundamental_group_elements_sym[np.argsort(length_trace_values)]
 
         # print(current_known_fundamental_group_elements_sym)
+
+        TraceLengthElements(current_known_fundamental_group_elements_sym, title=title.replace("Plot","Found Elements"))
 
         if self.latex:
             ax.scatter(traces, lengths, c='red',label=r'Random Elements From $\left\langle'+represent_matrix_as_latex(alpha) + ","+represent_matrix_as_latex(beta) +r'\right\rangle$')
