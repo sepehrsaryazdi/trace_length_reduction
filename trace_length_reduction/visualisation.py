@@ -151,12 +151,16 @@ class TraceLengthElements:
     """
     Class for visualising elements found during reduction, along with their length and traces.
     """
-    def __init__(self, elements:np.ndarray, title="Length Trace"):
-        assert isinstance(elements, np.ndarray), "Error: elements must be of type list."
+    def __init__(self, elements:list,elements_sym:np.ndarray, title="Length Trace"):
+        assert isinstance(elements, list), "Error: elements must be of type list."
         for element in elements:
-            assert isinstance(element, sp.Expr), "Error: element must be of type sp.Matrix"
+            assert isinstance(element, sp.Matrix), "Error: element must be of type sp.Matrix"
         
 
+        assert isinstance(elements_sym, np.ndarray), "Error: elements must be of type np.ndarray."
+        for element in elements_sym:
+            assert isinstance(element, sp.Expr), "Error: element must be of type sp.Expr"
+        
 
         trace_length_elements_window = tk.Toplevel()
         trace_length_elements_window.wm_title(title)
@@ -306,11 +310,11 @@ class LengthTracePlot:
              dtype = np.dtype([('x', float), ('y', float)]))
         
         current_known_fundamental_group_elements_sym = np.array(current_known_fundamental_group_elements_sym)
-        current_known_fundamental_group_elements_sym = current_known_fundamental_group_elements_sym[np.argsort(length_trace_values)]
+        # current_known_fundamental_group_elements_sym = current_known_fundamental_group_elements_sym[np.argsort(length_trace_values)]
 
         # print(current_known_fundamental_group_elements_sym)
 
-        TraceLengthElements(current_known_fundamental_group_elements_sym, title=title.replace("Plot","Found Elements"))
+        # TraceLengthElements(current_known_fundamental_group_elements,current_known_fundamental_group_elements_sym, title=title.replace("Plot","Found Elements"))
 
         if self.latex:
             ax.scatter(traces, lengths, c='red',label=r'Random Elements From $\left\langle'+represent_matrix_as_latex(alpha) + ","+represent_matrix_as_latex(beta) +r'\right\rangle$')
@@ -352,6 +356,33 @@ class LengthTracePlot:
         else:
             ax.scatter(sp.trace(AB_inv), calculate_geodesic_length(AB_inv), c='darkblue',label="A'(B')" + "**" + "(-1)", marker="2")
         
+
+
+        # current_known_fundamental_group_elements_rel_termination = self.create_random_group_elements(returned_generators, initial_generators, visited_generators, num_distinct_random_group_elements)
+        # current_known_fundamental_group_elements_rel_termination_sym = self.create_random_group_elements((sp.Symbol("A_p",commutative=False),sp.Symbol("B_p",commutative=False)), (sp.Symbol("A_p",commutative=False),sp.Symbol("B_p",commutative=False)), expressions, num_distinct_random_group_elements)
+
+        
+
+        if objective == "length":
+            
+            A, B = returned_generators
+            A_s, B_s = (sp.Symbol("(A')",commutative=False),sp.Symbol("(B')",commutative=False))
+            
+            elements_matrices = []
+            elements_symbols = []
+
+            for i in range(-10, 10):
+                elements_matrices.append(B*(A**i))
+                elements_symbols.append(B_s*(A_s**i))
+
+            f, ax = plt.subplots(figsize = (9, 6))
+            ticks = [r"$" +str(s).replace("**","^").replace("*","").replace("(","{").replace(")","}") + r"$" for s in elements_symbols]
+            ax.plot(ticks, [calculate_geodesic_length(e) for e in elements_matrices])
+            ax.set_xticklabels(ticks, rotation=45, ha='right',fontsize=self.fontsize - 5)
+            ax.set_ylabel(r"$\ell(\gamma)$",fontsize=self.fontsize)
+            ax.set_xlabel("$\gamma$",fontsize=self.fontsize)
+            ax.set_title("Length by Element",fontsize=self.fontsize)
+            plt.show()
 
         return ax
 
@@ -401,6 +432,9 @@ class LengthTracePlot:
 
        
         return ax
+    
+
+        
     
 
 
